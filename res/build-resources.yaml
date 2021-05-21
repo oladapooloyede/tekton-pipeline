@@ -1,0 +1,21 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: quarkus-app-source
+spec:
+  type: git
+  params:
+    - name: url
+      value: https://github.com/oladapooloyede/Second-quarkus-reactive-project.git
+    - name: revision
+      value: master
+---
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: quarkus-app-image
+spec:
+  type: image
+  params:
+    - name: url
+      value: "image-registry.openshift-image-registry.svc:5000/dapo-proj/dapo-app-image"
