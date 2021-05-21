@@ -34,9 +34,6 @@ spec:
       type: image
   stepTemplate:
     name: ""
-    securityContext:
-      privileged: true
-      runAsUser: 0
     volumeMounts:
     - mountPath: /var/lib/containers
       name: varlibc

@@ -1,0 +1,110 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: ci-pipeline
+  namespace: dapo-reference-pipeline
+spec:
+  params:
+  - description: git url to clone
+    name: git-source-url
+    type: string
+  - default: master
+    description: 'git revision to checkout (branch, tag, sha, ref…)'
+    name: git-source-revision
+    type: string
+  - name: LOCAL_SCAN_PATH
+    description:  image path
+  - name: REMOTE_IMAGE_URL
+    description: image path
+    default: image-registry.openshift-image-registry.svc:5000/dapo-proj/dapo-app-image
+  - name: SEVERITY_LEVELS
+    description:  vulnerability severity level
+    default: HIGH,CRITICAL
+  workspaces:
+  - name: app-source
+  - name: maven-settings
+  - name: shared-image-repo
+
+  tasks:
+  - name: git-clone 
+    params:
+    - name: url
+      value: $(params.git-source-url)
+    - name: revision
+      value: $(params.git-source-revision)
+    taskRef:
+      kind: ClusterTask
+      name: git-clone
+    workspaces:
+    - name: output
+      workspace: app-source
+
+  - name: build-and-analyze
+    params:
+    - name: GOALS
+      value:  
+        - clean
+        - test
+        - sonar:sonar
+        - '-Dsonar.host.url=http://sonarqube:9000'
+        - '-Dsonar.login=2ca9b6b85a76eec2cef908d870e4f2b0c9e69400'
+        - package
+    taskRef:
+      kind: ClusterTask
+      name: maven
+    runAfter:
+        - git-clone
+    workspaces:
+    - name: source
+      workspace: app-source
+    - name: maven-settings
+      workspace: maven-settings
+
+  - name: scan-build-artifact
+    taskRef:
+      kind: ClusterTask
+      name: trivy-scan
+    runAfter:
+        - build-and-analyze
+    params:
+      - name: SCAN_TYPE
+        value:  filesystem
+      - name: SEVERITY_LEVELS
+        value:  $(params.SEVERITY_LEVELS)
+      - name: SCAN_PATH_OR_IMAGE_URL
+        value:  $(params.LOCAL_SCAN_PATH)
+    workspaces:
+      - name: local-image-repo
+        workspace: app-source
+  
+  - name: build-image
+    taskRef:
+      name: buildah-build
+      kind: Task
+    runAfter:
+        - build-and-analyze
+    params:
+      - name: IMAGE
+        value: $(params.REMOTE_IMAGE_URL)
+    workspaces:
+      - name: source
+        workspace: app-source
+      - name: varlibcontainers
+        workspace: shared-image-repo
+
+  - name: scan-local-image
+    taskRef:
+      kind: ClusterTask
+      name: trivy-scan
+    runAfter:
+        - build-image
+    params:
+      - name: SCAN_TYPE
+        value: filesystem
+      - name: SEVERITY_LEVELS
+        value: CRITICAL
+      - name: SCAN_PATH_OR_IMAGE_URL
+        value: image-digest
+    workspaces:
+      - name: local-image-repo
+        workspace: shared-image-repo
