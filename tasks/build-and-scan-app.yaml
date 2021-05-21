@@ -1,0 +1,79 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: build-and-scan-app
+  namespace: dapo-reference-pipeline
+spec:
+  params:
+  - default: .
+    description: the context dir within source
+    name: contextDir
+    type: string
+  - default: https://repo.maven.apache.org/maven2/
+    description: the maven mirrror url
+    name: mavenMirrorUrl
+    type: string
+  - default: $(outputs.resources.builtImage.url)
+    description: the fully qualified image name
+    name: destinationImage
+    type: string
+  - default: Dockerfile
+    description: the docker file to used for building the application
+    name: dockerFile
+    type: string
+  - default: "false"
+    description: tls verify
+    name: tlsVerify
+    type: string
+  resources:
+    inputs:
+    - name: source
+      type: git
+    outputs:
+    - name: builtImage
+      type: image
+  stepTemplate:
+    name: ""
+    securityContext:
+      privileged: true
+      runAsUser: 0
+    volumeMounts:
+    - mountPath: /var/lib/containers
+      name: varlibc
+  steps:
+  - args:
+    - clean
+    - package
+    command:
+    - mvn
+    env:
+    - name: user.home
+      value: /home/tekton
+    image: docker.io/maven:3.6.3-openjdk-11-slim
+    name: build-sources
+    workingDir: /workspace/source/$(inputs.params.contextDir)
+  - args:
+    - bud
+    - --layers
+    - -f
+    - $(inputs.params.dockerFile)
+    - -t
+    - $(inputs.params.destinationImage)
+    - .
+    command:
+    - buildah
+    image: quay.io/buildah/stable
+    name: build-image
+    workingDir: /workspace/source/$(inputs.params.contextDir)
+  - args:
+    - push
+    - --tls-verify=$(inputs.params.tlsVerify)
+    - $(inputs.params.destinationImage)
+    - docker://$(inputs.params.destinationImage)
+    command:
+    - buildah
+    image: quay.io/buildah/stable
+    name: push-image
+    workingDir: /workspace/source/$(inputs.params.contextDir)
+  volumes:
+  - name: varlibc
