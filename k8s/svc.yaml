@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: dapo-reference-cd-pipeline
+    app.kubernetes.io/component: dapo-reference-cd-pipeline
+    app.kubernetes.io/instance: dapo-reference-cd-pipeline
+  name: dapo-reference-cd-pipeline
+  namespace: dapo-reference-pipeline
+spec:
+  ports:
+  - port: 8080
+  selector:
+    deployment: dapo-reference-cd-pipeline

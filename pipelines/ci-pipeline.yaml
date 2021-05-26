@@ -16,7 +16,7 @@ spec:
     description:  image path
   - name: REMOTE_IMAGE_URL
     description: image path
-    default: image-registry.openshift-image-registry.svc:5000/dapo-proj/dapo-app-image
+    default: image-registry.openshift-image-registry.svc:5000/dapo-reference-pipeline/dapo-app-image
   - name: SEVERITY_LEVELS
     description:  vulnerability severity level
     default: HIGH,CRITICAL
@@ -47,8 +47,9 @@ spec:
         - test
         - sonar:sonar
         - '-Dsonar.host.url=http://sonarqube:9000'
-        - '-Dsonar.login=2ca9b6b85a76eec2cef908d870e4f2b0c9e69400'
+        - '-Dsonar.login=1a0bb0381d4c49a5d456212067332672caf9c7b2'
         - package
+        - -Dquarkus.native.container-build=true
     taskRef:
       kind: ClusterTask
       name: maven
@@ -104,7 +105,22 @@ spec:
       - name: SEVERITY_LEVELS
         value: CRITICAL
       - name: SCAN_PATH_OR_IMAGE_URL
-        value: image-digest
+        value: $(workspace.source.image-digest)
     workspaces:
       - name: local-image-repo
+        workspace: shared-image-repo
+
+  - name: push-image
+    taskRef:
+      name: buildah-push
+      kind: Task
+    runAfter:
+        - build-image
+    params:
+      - name: IMAGE
+        value: $(params.REMOTE_IMAGE_URL)
+    workspaces:
+      - name: source
+        workspace: app-source
+      - name: varlibcontainers
         workspace: shared-image-repo
