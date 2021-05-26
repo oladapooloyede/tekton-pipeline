@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dapo-reference-cd-pipeline
+  namespace: dapo-reference-pipeline
+spec:
+  template:
+    spec:
+      containers:
+      - name: dapo-reference-cd-pipeline
+        image: image-registry.openshift-image-registry.svc:5000/dapo-reference-pipeline/dapo-app-image:latest
+
