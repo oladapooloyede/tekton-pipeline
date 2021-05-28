@@ -5,7 +5,5 @@ kind: Kustomization
 bases:
 - ../../base
 
-namespace: dapo-reference-pipeline
-
 patches:
 - ./deployment-patches.yaml
