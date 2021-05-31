@@ -9,6 +9,6 @@ metadata:
   namespace: dapo-reference-pipeline
 spec:
   ports:
-  - port: 9090
+  - port: 8080
   selector:
     deployment: dapo-reference-cd-pipeline
