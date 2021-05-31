@@ -21,9 +21,6 @@ spec:
     type: RollingUpdate
   template:
     metadata:
-      annotations:
-        openshift.io/generated-by: OpenShiftNewApp
-      creationTimestamp: null
       labels:
         deployment: dapo-reference-cd-pipeline
     spec:
