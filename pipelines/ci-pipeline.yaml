@@ -103,9 +103,9 @@ spec:
       - name: SCAN_TYPE
         value: filesystem
       - name: SEVERITY_LEVELS
-        value: CRITICAL
+        value: $(params.SEVERITY_LEVELS)
       - name: SCAN_PATH_OR_IMAGE_URL
-        value: $(workspace.source.image-digest)
+        value: ./storage
     workspaces:
       - name: local-image-repo
         workspace: shared-image-repo
