@@ -49,6 +49,9 @@ spec:
 
   - name: update-yaml
     image: quay.io/dsanchor/ubi8-git:0.0.2
+    - env:
+        - name: IMAGE_TAG
+          value: $(params.imageTag)
     workingDir: $(workspaces.repository.path)
     script: |
       #!/usr/bin/env sh
@@ -58,11 +61,11 @@ spec:
         echo "**** Updating $(params.fileName) image to $(params.image):$(params.imageTag)"
       fi
 
-      IMAGE_TAG = $(params.imageTag)
+      IMAGE_TAG=${IMAGE_TAG//'"'/}
 
       chmod 707 ./$(params.gitPath)/$(params.fileName)
 
-      cat ./deployment_patches.yaml_ |  envsubst > ./deployment_patches.yaml
+      cat ./$(params.gitPath)/$(params.fileName)_ |  envsubst > ./$(params.gitPath)/$(params.fileName)
 
   - name: commit-push-changes
     image: alpine/git:v2.26.2
