@@ -8,4 +8,4 @@ spec:
     spec:
       containers:
       - name: dapo-reference-cd-pipeline
-        image: image-registry.openshift-image-registry.svc:5000/dapo-reference-pipeline/dapo-app-image:2021-06-01-21-33-05
+        image: image-registry.openshift-image-registry.svc:5000/dapo-reference-pipeline/dapo-app-image:2021-06-01-21-44-33
