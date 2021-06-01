@@ -21,9 +21,6 @@ spec:
     description: Name of the file to be updated
     type: string
     default: deployment-patches.yaml
-  - name: image
-    description: The image to be written into the YAML
-    type: string
   - name: imageTag
     description: The image tag to be written into the YAML
     type: string
@@ -49,16 +46,16 @@ spec:
 
   - name: update-yaml
     image: quay.io/dsanchor/ubi8-git:0.0.2
-    - env:
-        - name: IMAGE_TAG
-          value: $(params.imageTag)
+    env:
+      - name: IMAGE_TAG
+        value: $(params.imageTag)
     workingDir: $(workspaces.repository.path)
     script: |
       #!/usr/bin/env sh
       set -e
 
       if [[ "$(params.verbose)" == "true" ]] ; then
-        echo "**** Updating $(params.fileName) image to $(params.image):$(params.imageTag)"
+        echo "**** Updating $(params.fileName) image tag to $(params.imageTag)"
       fi
 
       IMAGE_TAG=${IMAGE_TAG//'"'/}
@@ -77,7 +74,7 @@ spec:
       git config --global user.name "OpenShift Pipeline"
 
       git add *
-      git commit --allow-empty -m "[OpenShift Pipeline] Updating $(params.fileName) image to $(params.image):$(params.imageTag)"
+      git commit --allow-empty -m "[OpenShift Pipeline] Updating $(params.fileName) image tag to $(params.imageTag)"
       git push origin "$(params.gitRepositoryRevision)" -v
 
   workspaces:

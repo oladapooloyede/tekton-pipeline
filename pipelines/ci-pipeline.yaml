@@ -155,8 +155,6 @@ spec:
       value: $(params.KUSTOMIZE_GIT_URL)
     - name: gitPath
       value: $(params.KUSTOMIZE_GIT_CONTEXT_DIR)
-    - name: image
-      value: $(params.REMOTE_IMAGE_URL)
     - name: imageTag
       value: $(tasks.generate-tag.results.image-tag)
     - name: verbose
