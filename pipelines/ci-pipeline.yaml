@@ -14,16 +14,27 @@ spec:
     type: string
   - name: LOCAL_SCAN_PATH
     description:  image path
+    default: ./
+  - name: LOCAL_IMAGE_SCAN_PATH
+    description:  image path
+    default: ./
   - name: REMOTE_IMAGE_URL
     description: image path
     default: image-registry.openshift-image-registry.svc:5000/dapo-reference-pipeline/dapo-app-image
   - name: SEVERITY_LEVELS
     description:  vulnerability severity level
     default: HIGH,CRITICAL
+  - name: KUSTOMIZE_GIT_URL
+    description: Kustomize git repo for CD
+    default: https://github.com/oladapooloyede/tekton-pipeline.git
+  - name: KUSTOMIZE_GIT_CONTEXT_DIR
+    description: Kustomize git repo context directory for CD
+    default: k8s/overlays/dev
   workspaces:
   - name: app-source
   - name: maven-settings
   - name: shared-image-repo
+  - name: kustomize-repo
 
   tasks:
   - name: git-clone 
@@ -39,6 +50,11 @@ spec:
     - name: output
       workspace: app-source
 
+  - name: generate-tag
+    taskRef:
+      kind: Task
+      name: generate-tag
+
   - name: build-and-analyze
     params:
     - name: GOALS
@@ -47,7 +63,7 @@ spec:
         - test
         - sonar:sonar
         - '-Dsonar.host.url=http://sonarqube:9000'
-        - '-Dsonar.login=1a0bb0381d4c49a5d456212067332672caf9c7b2'
+        - '-Dsonar.login=128934bb2d1a306ad39990b6badb6028cf1ceb02'
         - package
         - -Dquarkus.native.container-build=true
     taskRef:
@@ -55,6 +71,7 @@ spec:
       name: maven
     runAfter:
         - git-clone
+        - generate-tag
     workspaces:
     - name: source
       workspace: app-source
@@ -105,7 +122,7 @@ spec:
       - name: SEVERITY_LEVELS
         value: $(params.SEVERITY_LEVELS)
       - name: SCAN_PATH_OR_IMAGE_URL
-        value: ./storage
+        value: $(params.LOCAL_IMAGE_SCAN_PATH)
     workspaces:
       - name: local-image-repo
         workspace: shared-image-repo
@@ -119,8 +136,31 @@ spec:
     params:
       - name: IMAGE
         value: $(params.REMOTE_IMAGE_URL)
+      - name: IMAGE_TAG
+        value: $(tasks.generate-tag.results.image-tag)
     workspaces:
       - name: source
         workspace: app-source
       - name: varlibcontainers
         workspace: shared-image-repo
+
+  - name: update-kustomize-repo
+    runAfter:
+    - push-image
+    taskRef:
+      kind: Task
+      name: update-kustomize-repo
+    params:
+    - name: gitRepositoryUrl
+      value: $(params.KUSTOMIZE_GIT_URL)
+    - name: gitPath
+      value: $(params.KUSTOMIZE_GIT_CONTEXT_DIR)
+    - name: image
+      value: $(params.REMOTE_IMAGE_URL)
+    - name: imageTag
+      value: $(tasks.generate-tag.results.image-tag)
+    - name: verbose
+      value: 'true'
+    workspaces:
+      - name: repository
+        workspace: kustomize-repo
