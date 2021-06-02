@@ -12,6 +12,12 @@ spec:
     description: 'git revision to checkout (branch, tag, sha, ref…)'
     name: git-source-revision
     type: string
+  - name: SONAR_URL
+    description: SonarQube url for static code analysis
+    default: http://sonarqube:9000
+  - name: SONAR_AUTH_TOKEN
+    description: SonarQube authentication token for static code analysis
+    default: 128934bb2d1a306ad39990b6badb6028cf1ceb02
   - name: LOCAL_SCAN_PATH
     description:  image path
     default: ./
@@ -55,17 +61,12 @@ spec:
       kind: Task
       name: generate-tag
 
-  - name: build-and-analyze
+  - name: run-test-cases
     params:
     - name: GOALS
       value:  
         - clean
         - test
-        - sonar:sonar
-        - '-Dsonar.host.url=http://sonarqube:9000'
-        - '-Dsonar.login=128934bb2d1a306ad39990b6badb6028cf1ceb02'
-        - package
-        - -Dquarkus.native.container-build=true
     taskRef:
       kind: ClusterTask
       name: maven
@@ -78,12 +79,48 @@ spec:
     - name: maven-settings
       workspace: maven-settings
 
+  - name: static-code-analysis
+    params:
+    - name: GOALS
+      value:  
+        - sonar:sonar
+        - '-Dsonar.host.url=$(params.SONAR_URL)'
+        - '-Dsonar.login=$(params.SONAR_AUTH_TOKEN)'
+    taskRef:
+      kind: ClusterTask
+      name: maven
+    runAfter:
+        - run-test-cases
+    workspaces:
+    - name: source
+      workspace: app-source
+    - name: maven-settings
+      workspace: maven-settings
+
+  - name: build-artifact
+    params:
+    - name: GOALS
+      value:
+        - -DskipTests  
+        - package
+        - -Dquarkus.native.container-build=true
+    taskRef:
+      kind: ClusterTask
+      name: maven
+    runAfter:
+        - static-code-analysis
+    workspaces:
+    - name: source
+      workspace: app-source
+    - name: maven-settings
+      workspace: maven-settings
+
   - name: scan-build-artifact
     taskRef:
       kind: ClusterTask
       name: trivy-scan
     runAfter:
-        - build-and-analyze
+        - build-artifact
     params:
       - name: SCAN_TYPE
         value:  filesystem
@@ -100,7 +137,7 @@ spec:
       name: buildah-build
       kind: Task
     runAfter:
-        - build-and-analyze
+        - build-artifact
     params:
       - name: IMAGE
         value: $(params.REMOTE_IMAGE_URL)
