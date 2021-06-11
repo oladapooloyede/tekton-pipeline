@@ -180,10 +180,30 @@ spec:
         workspace: app-source
       - name: varlibcontainers
         workspace: shared-image-repo
+        
+   - name: scan-remote-image
+      params:
+        - name: SCAN_TYPE
+          value: image
+        - name: SEVERITY_LEVELS
+          value: $(params.SEVERITY_LEVELS)
+        - name: SCAN_PATH_OR_IMAGE_URL
+          value: '$(params.REMOTE_IMAGE_URL):$(tasks.generate-tag.results.image-tag)'
+        - name: IGNORE_UNFIXED
+          value: 'true'
+      runAfter:
+        - push-image
+      taskRef:
+        kind: ClusterTask
+        name: trivy-scan
+      workspaces:
+        - name: local-image-repo
+          workspace: shared-image-repo
+
 
   - name: update-kustomize-repo
     runAfter:
-    - push-image
+    - scan-remote-image
     taskRef:
       kind: Task
       name: update-kustomize-repo
