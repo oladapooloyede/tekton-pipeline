@@ -1,0 +1,54 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: ci-pipeline-template
+  namespace: cop-pipeline
+  resourceVersion: '1310382726'
+  selfLink: >-
+    /apis/triggers.tekton.dev/v1alpha1/namespaces/cop-pipeline/triggertemplates/ci-pipeline-template
+spec:
+  params:
+    - name: git-repo-url
+    - name: git-revision
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: ci-pipeline-
+      spec:
+        params:
+          - name: git-source-url
+            value: $(tt.params.git-repo-url)
+          - name: git-source-revision
+            value: $(tt.params.git-revision)
+          - name: SONAR_URL
+            value: 'http://sonarqube:9000'
+          - name: SONAR_AUTH_TOKEN
+            value: 128934bb2d1a306ad39990b6badb6028cf1ceb02
+          - name: LOCAL_SCAN_PATH
+            value: ./
+          - name: LOCAL_IMAGE_SCAN_PATH
+            value: ./
+          - name: REMOTE_IMAGE_URL
+            value: >-
+              image-registry.openshift-image-registry.svc:5000/cop-pipeline/dapo-app-image
+          - name: SEVERITY_LEVELS
+            value: CRITICAL
+          - name: KUSTOMIZE_GIT_URL
+            value: 'https://gitlab.bell.corp.bce.ca/AI/aiocp/tekton-pipeline.git'
+          - name: KUSTOMIZE_GIT_CONTEXT_DIR
+            value: k8s/overlays/dev
+        pipelineRef:
+          name: ci-pipeline
+        workspaces:
+          - name: app-source
+            persistentVolumeClaim:
+              claimName: workspace-pvc2
+          - name: maven-settings
+            persistentVolumeClaim:
+              claimName: maven-settings-pvc
+          - name: shared-image-repo
+            persistentVolumeClaim:
+              claimName: workspace-pvc2
+          - emptyDir: {}
+            name: kustomize-repo

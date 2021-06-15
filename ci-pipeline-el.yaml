@@ -1,0 +1,45 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  selfLink: >-
+    /apis/triggers.tekton.dev/v1alpha1/namespaces/cop-pipeline/eventlisteners/ci-pipeline
+  name: ci-pipeline
+  namespace: cop-pipeline
+  finalizers:
+    - eventlisteners.triggers.tekton.dev
+spec:
+  namespaceSelector: {}
+  podTemplate: {}
+  resources: {}
+  serviceAccountName: pipeline
+  triggers:
+    - bindings:
+        - kind: TriggerBinding
+          ref: ci-pipeline-binding
+      name: ci-pipeline
+      template:
+        ref: ci-pipeline-template
+status:
+  address:
+    url: 'http://el-ci-pipeline.cop-pipeline.svc.cluster.local:8080'
+  conditions:
+    - lastTransitionTime: '2021-06-15T20:36:58Z'
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: 'True'
+      type: Available
+    - lastTransitionTime: '2021-06-15T20:36:58Z'
+      message: Deployment exists
+      status: 'True'
+      type: Deployment
+    - lastTransitionTime: '2021-06-15T20:36:58Z'
+      message: ReplicaSet "el-ci-pipeline-d97b747df" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: 'True'
+      type: Progressing
+    - lastTransitionTime: '2021-06-15T20:36:58Z'
+      message: Service exists
+      status: 'True'
+      type: Service
+  configuration:
+    generatedName: el-ci-pipeline
