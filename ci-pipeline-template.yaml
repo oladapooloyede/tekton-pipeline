@@ -35,7 +35,7 @@ spec:
           - name: SEVERITY_LEVELS
             value: CRITICAL
           - name: KUSTOMIZE_GIT_URL
-            value: 'https://gitlab.bell.corp.bce.ca/AI/aiocp/tekton-pipeline.git'
+            value: ''
           - name: KUSTOMIZE_GIT_CONTEXT_DIR
             value: k8s/overlays/dev
         pipelineRef:
