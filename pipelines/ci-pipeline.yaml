@@ -38,7 +38,7 @@ spec:
       description: vulnerability severity level
       name: SEVERITY_LEVELS
       type: string
-    - default: 'https://gitlab.bell.corp.bce.ca/AI/aiocp/tekton-pipeline.git'
+    - default: ''
       description: Kustomize git repo for CD
       name: KUSTOMIZE_GIT_URL
       type: string
