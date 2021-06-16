@@ -35,7 +35,7 @@ spec:
           - name: SEVERITY_LEVELS
             value: CRITICAL
           - name: KUSTOMIZE_GIT_URL
-            value: ''
+            value: 'https://github.com/oladapooloyede/Second-quarkus-reactive-project.git'
           - name: KUSTOMIZE_GIT_CONTEXT_DIR
             value: k8s/overlays/dev
         pipelineRef:
