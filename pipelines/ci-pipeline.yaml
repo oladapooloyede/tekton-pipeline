@@ -38,7 +38,7 @@ spec:
       description: vulnerability severity level
       name: SEVERITY_LEVELS
       type: string
-    - default: ''
+    - default: 'https://github.com/oladapooloyede/Second-quarkus-reactive-project.git'
       description: Kustomize git repo for CD
       name: KUSTOMIZE_GIT_URL
       type: string
