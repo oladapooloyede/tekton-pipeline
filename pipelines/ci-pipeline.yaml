@@ -2,220 +2,204 @@ apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
   name: ci-pipeline
-  namespace: dapo-reference-pipeline
+  namespace: cop-pipeline
+  resourceVersion: '1296617614'
 spec:
   params:
-  - description: git url to clone
-    name: git-source-url
-    type: string
-  - default: master
-    description: 'git revision to checkout (branch, tag, sha, ref…)'
-    name: git-source-revision
-    type: string
-  - name: SONAR_URL
-    description: SonarQube url for static code analysis
-    default: http://sonarqube:9000
-  - name: SONAR_AUTH_TOKEN
-    description: SonarQube authentication token for static code analysis
-    default: 128934bb2d1a306ad39990b6badb6028cf1ceb02
-  - name: LOCAL_SCAN_PATH
-    description:  image path
-    default: ./
-  - name: LOCAL_IMAGE_SCAN_PATH
-    description:  image path
-    default: ./
-  - name: REMOTE_IMAGE_URL
-    description: image path
-    default: image-registry.openshift-image-registry.svc:5000/dapo-reference-pipeline/dapo-app-image
-  - name: SEVERITY_LEVELS
-    description:  vulnerability severity level
-    default: HIGH,CRITICAL
-  - name: KUSTOMIZE_GIT_URL
-    description: Kustomize git repo for CD
-    default: https://github.com/oladapooloyede/tekton-pipeline.git
-  - name: KUSTOMIZE_GIT_CONTEXT_DIR
-    description: Kustomize git repo context directory for CD
-    default: k8s/overlays/dev
-  workspaces:
-  - name: app-source
-  - name: maven-settings
-  - name: shared-image-repo
-  - name: kustomize-repo
-
+    - description: git url to clone
+      name: git-source-url
+      type: string
+    - default: master
+      description: 'git revision to checkout (branch, tag, sha, ref…)'
+      name: git-source-revision
+      type: string
+    - default: 'http://sonarqube:9000'
+      description: SonarQube url for static code analysis
+      name: SONAR_URL
+      type: string
+    - default: 128934bb2d1a306ad39990b6badb6028cf1ceb02
+      description: SonarQube authentication token for static code analysis
+      name: SONAR_AUTH_TOKEN
+      type: string
+    - default: ./
+      description: image path
+      name: LOCAL_SCAN_PATH
+      type: string
+    - default: ./
+      description: image path
+      name: LOCAL_IMAGE_SCAN_PATH
+      type: string
+    - default: >-
+        image-registry.openshift-image-registry.svc:5000/cop-pipeline/dapo-app-image
+      description: image path
+      name: REMOTE_IMAGE_URL
+      type: string
+    - default: 'HIGH,CRITICAL'
+      description: vulnerability severity level
+      name: SEVERITY_LEVELS
+      type: string
+    - default: 'https://gitlab.bell.corp.bce.ca/AI/aiocp/tekton-pipeline.git'
+      description: Kustomize git repo for CD
+      name: KUSTOMIZE_GIT_URL
+      type: string
+    - default: k8s/overlays/dev
+      description: Kustomize git repo context directory for CD
+      name: KUSTOMIZE_GIT_CONTEXT_DIR
+      type: string
   tasks:
-  - name: git-clone 
-    params:
-    - name: url
-      value: $(params.git-source-url)
-    - name: revision
-      value: $(params.git-source-revision)
-    taskRef:
-      kind: ClusterTask
-      name: git-clone
-    workspaces:
-    - name: output
-      workspace: app-source
-
-  - name: generate-tag
-    taskRef:
-      kind: Task
-      name: generate-tag
-
-  - name: run-test-cases
-    params:
-    - name: GOALS
-      value:  
-        - clean
-        - test
-    taskRef:
-      kind: ClusterTask
-      name: maven
-    runAfter:
+    - name: git-clone
+      params:
+        - name: url
+          value: $(params.git-source-url)
+        - name: revision
+          value: $(params.git-source-revision)
+        - name: sslVerify
+          value: 'false'
+        - name: noProxy
+          value: 'true'
+      taskRef:
+        kind: ClusterTask
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: app-source
+    - name: run-test-cases
+      params:
+        - name: GOALS
+          value:
+            - clean
+            - test
+      runAfter:
         - git-clone
-        - generate-tag
-    workspaces:
-    - name: source
-      workspace: app-source
-    - name: maven-settings
-      workspace: maven-settings
-
-  - name: static-code-analysis
-    params:
-    - name: GOALS
-      value:  
-        - sonar:sonar
-        - '-Dsonar.host.url=$(params.SONAR_URL)'
-        - '-Dsonar.login=$(params.SONAR_AUTH_TOKEN)'
-    taskRef:
-      kind: ClusterTask
-      name: maven
-    runAfter:
+      taskRef:
+        kind: Task
+        name: maven
+      workspaces:
+        - name: source
+          workspace: app-source
+        - name: maven-settings
+          workspace: maven-settings
+    - name: build-artifact
+      params:
+        - name: GOALS
+          value:
+            - '-DskipTests'
+            - package
+            - '-Dquarkus.native.container-build=true'
+      runAfter:
         - run-test-cases
-    workspaces:
-    - name: source
-      workspace: app-source
-    - name: maven-settings
-      workspace: maven-settings
-
-  - name: build-artifact
-    params:
-    - name: GOALS
-      value:
-        - -DskipTests  
-        - package
-        - -Dquarkus.native.container-build=true
-    taskRef:
-      kind: ClusterTask
-      name: maven
-    runAfter:
-        - static-code-analysis
-    workspaces:
-    - name: source
-      workspace: app-source
-    - name: maven-settings
-      workspace: maven-settings
-
-  - name: scan-build-artifact
-    taskRef:
-      kind: ClusterTask
-      name: trivy-scan
-    runAfter:
+      taskRef:
+        kind: ClusterTask
+        name: maven
+      workspaces:
+        - name: source
+          workspace: app-source
+        - name: maven-settings
+          workspace: maven-settings
+    - name: scan-build-artifact
+      params:
+        - name: SCAN_TYPE
+          value: filesystem
+        - name: SEVERITY_LEVELS
+          value: $(params.SEVERITY_LEVELS)
+        - name: SCAN_PATH_OR_IMAGE_URL
+          value: $(params.LOCAL_SCAN_PATH)
+      runAfter:
         - build-artifact
-    params:
-      - name: SCAN_TYPE
-        value:  filesystem
-      - name: SEVERITY_LEVELS
-        value:  $(params.SEVERITY_LEVELS)
-      - name: SCAN_PATH_OR_IMAGE_URL
-        value:  $(params.LOCAL_SCAN_PATH)
-    workspaces:
-      - name: local-image-repo
-        workspace: app-source
-  
-  - name: build-image
-    taskRef:
-      name: buildah-build
-      kind: Task
-    runAfter:
+      taskRef:
+        kind: Task
+        name: trivy-scan
+      workspaces:
+        - name: local-image-repo
+          workspace: app-source
+    - name: build-image
+      params:
+        - name: IMAGE
+          value: $(params.REMOTE_IMAGE_URL)
+        - name: TLSVERIFY
+          value: 'false'
+      runAfter:
         - build-artifact
-    params:
-      - name: IMAGE
-        value: $(params.REMOTE_IMAGE_URL)
-    workspaces:
-      - name: source
-        workspace: app-source
-      - name: varlibcontainers
-        workspace: shared-image-repo
-
-  - name: scan-local-image
-    taskRef:
-      kind: ClusterTask
-      name: trivy-scan
-    runAfter:
+      taskRef:
+        kind: Task
+        name: buildah-build
+      workspaces:
+        - name: source
+          workspace: app-source
+        - name: varlibcontainers
+          workspace: shared-image-repo
+    - name: scan-local-image
+      params:
+        - name: SCAN_TYPE
+          value: filesystem
+        - name: SEVERITY_LEVELS
+          value: $(params.SEVERITY_LEVELS)
+        - name: SCAN_PATH_OR_IMAGE_URL
+          value: $(params.LOCAL_IMAGE_SCAN_PATH)
+      runAfter:
         - build-image
-    params:
-      - name: SCAN_TYPE
-        value: filesystem
-      - name: SEVERITY_LEVELS
-        value: $(params.SEVERITY_LEVELS)
-      - name: SCAN_PATH_OR_IMAGE_URL
-        value: $(params.LOCAL_IMAGE_SCAN_PATH)
-    workspaces:
-      - name: local-image-repo
-        workspace: shared-image-repo
-
-  - name: push-image
-    taskRef:
-      name: buildah-push
-      kind: Task
-    runAfter:
+      taskRef:
+        kind: Task
+        name: trivy-scan
+      workspaces:
+        - name: local-image-repo
+          workspace: shared-image-repo
+    - name: push-image
+      params:
+        - name: IMAGE
+          value: $(params.REMOTE_IMAGE_URL)
+        - name: IMAGE_TAG
+          value: $(params.git-source-revision)
+        - name: TLSVERIFY
+          value: 'false'
+      runAfter:
         - build-image
-    params:
-      - name: IMAGE
-        value: $(params.REMOTE_IMAGE_URL)
-      - name: IMAGE_TAG
-        value: $(tasks.generate-tag.results.image-tag)
-    workspaces:
-      - name: source
-        workspace: app-source
-      - name: varlibcontainers
-        workspace: shared-image-repo
-        
-   - name: scan-remote-image
+      taskRef:
+        kind: Task
+        name: buildah-push
+      workspaces:
+        - name: source
+          workspace: app-source
+        - name: varlibcontainers
+          workspace: shared-image-repo
+    - name: scan-remote-image
       params:
         - name: SCAN_TYPE
           value: image
         - name: SEVERITY_LEVELS
           value: $(params.SEVERITY_LEVELS)
         - name: SCAN_PATH_OR_IMAGE_URL
-          value: '$(params.REMOTE_IMAGE_URL):$(tasks.generate-tag.results.image-tag)'
+          value: '$(params.REMOTE_IMAGE_URL):$(params.git-source-revision)'
         - name: IGNORE_UNFIXED
           value: 'true'
       runAfter:
         - push-image
       taskRef:
-        kind: ClusterTask
+        kind: Task
         name: trivy-scan
       workspaces:
         - name: local-image-repo
           workspace: shared-image-repo
-
-
-  - name: update-kustomize-repo
-    runAfter:
-    - scan-remote-image
-    taskRef:
-      kind: Task
-      name: update-kustomize-repo
-    params:
-    - name: gitRepositoryUrl
-      value: $(params.KUSTOMIZE_GIT_URL)
-    - name: gitPath
-      value: $(params.KUSTOMIZE_GIT_CONTEXT_DIR)
-    - name: imageTag
-      value: $(tasks.generate-tag.results.image-tag)
-    - name: verbose
-      value: 'true'
-    workspaces:
-      - name: repository
-        workspace: kustomize-repo
+    - name: update-kustomize-repo
+      params:
+        - name: gitRepositoryUrl
+          value: $(params.KUSTOMIZE_GIT_URL)
+        - name: gitPath
+          value: $(params.KUSTOMIZE_GIT_CONTEXT_DIR)
+        - name: imageTag
+          value: $(params.git-source-revision)
+        - name: verbose
+          value: 'true'
+      runAfter:
+        - scan-remote-image
+      taskRef:
+        kind: Task
+        name: update-kustomize-repo
+      workspaces:
+        - name: repository
+          workspace: kustomize-repo
+  workspaces:
+    - name: app-source
+    - name: maven-settings
+    - name: shared-image-repo
+    - name: kustomize-repo
