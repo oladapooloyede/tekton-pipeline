@@ -19,4 +19,7 @@ OpenShift Pipelines are based on the Tekton project (https://tekton.dev) - a new
 
 The purpose of this article is demonstrate a reference implementation for the Openshift Pipelines using a sample Quarkus project.
 
-If everything works well, the 
+If everything works well, pipeline look like this:-
+<br/>
+
+<img src="pipeline.png"></img>
