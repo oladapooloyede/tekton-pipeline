@@ -1,0 +1,113 @@
+apiVersion: tekton.dev/v1beta1
+kind: ClusterTask
+metadata:
+  name: trivy-scan
+spec:
+  description: >-
+    Trivy is a simple and comprehensive vulnerability scanner for containers and
+    other artifacts. 
+    It detects vulnerabilities of OS packages (Alpine, RHEL, CentOS, etc.) and
+    application dependencies (Bundler, Composer, npm, yarn, etc.).
+    Trivy can scan three different artifacts: 1.  Container Images 2. 
+    Filesystem 3.  Git Repositories
+  params:
+    - default: 'localhost,127.0.0.1'
+      description: >-
+        Comma delimited list of hostnames or IP address which should be accessed
+        directly without using the proxy service. eg.
+        localhost,127.0.0.1,registry,example.com
+      name: NO_PROXY
+      type: string
+    - default: ''
+      description: >-
+        Address of the proxy service to use for HTTP traffic in the following
+        form {PROTOCOL}://{IP or HOSTNAME}:{PORT} eg.
+        http://proxy.corp.example.com:8128 or
+        https://user:password@proxy.corp.example.com:8128
+      name: HTTP_PROXY
+      type: string
+    - default: ''
+      description: The username of the private registry
+      name: REGISTRY_USERNAME
+      type: string
+    - default: ''
+      description: The password of the private registry
+      name: REGISTRY_PASSWORD
+      type: string
+    - default: 'false'
+      description: if image registry is insecure
+      name: INSECURE_REGISTRY
+      type: string
+    - default: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
+      description: >-
+        Vulnerability severity level options are negligible,
+        UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+      name: SEVERITY_LEVELS
+      type: string
+    - default: image
+      description: >-
+        Type of scan to perform (options are filesystem (fs), image (i),
+        repository (repo))
+      name: SCAN_TYPE
+      type: string
+    - description: scan path or image url
+      name: SCAN_PATH_OR_IMAGE_URL
+      type: string
+    - default: 'false'
+      description: To ignore unpatched/unfixed vulnerabilities
+      name: IGNORE_UNFIXED
+      type: string
+    - default: ''
+      description: >-
+        Vulnerability type (options - os,library) Default if not specified -
+        "os,library"
+      name: VULN_TYPE
+      type: string
+  steps:
+    - env:
+        - name: NO_PROXY
+          value: $(params.NO_PROXY)
+        - name: HTTP_PROXY
+          value: $(params.HTTP_PROXY)
+        - name: HTTPS_PROXY
+          value: $(params.HTTP_PROXY)
+        - name: TRIVY_NON_SSL
+          value: $(params.INSECURE_REGISTRY)
+        - name: TRIVY_USERNAME
+          value: $(params.REGISTRY_USERNAME)
+        - name: TRIVY_PASSWORD
+          value: $(params.REGISTRY_PASSWORD)
+      image: registry.access.redhat.com/ubi8/ubi
+      name: trivy-scan-image
+      resources: {}
+      script: >
+        #!/bin/bash
+        set +x
+        curl -sSfL
+        https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh
+        | sh -s -- -b /usr/local/bin 
+        echo "Trivy ..."
+        IGNORE_UNFIXED=''
+        if [ $(params.IGNORE_UNFIXED) == "true" ]; then  
+            IGNORE_UNFIXED='--ignore-unfixed'
+        fi
+        VULN_TYPE=''
+        if [ $(params.VULN_TYPE) != "" ]; then  
+            VULN_TYPE='--vuln-type '$(params.VULN_TYPE)
+        fi
+        ls -la /workspace/local-image-repo 
+        echo "Image to scan: "  $(params.SCAN_PATH_OR_IMAGE_URL)
+        trivy $(params.SCAN_TYPE) --exit-code 1 --severity
+        $(params.SEVERITY_LEVELS) \
+        $IGNORE_UNFIXED $VULN_TYPE $(params.SCAN_PATH_OR_IMAGE_URL)
+        retVal=$?
+        echo "Return code is="$retVal
+        if [ $retVal -ne 0 ]; then 
+          echo "Scanning failed... vulnerability detected!"
+        else
+            echo "Scanning passed ... no vulnerability detected!" 
+        fi
+        exit $retVal
+      workingDir: /workspace/local-image-repo
+  workspaces:
+    - name: local-image-repo

@@ -2,7 +2,7 @@ apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
   name: ci-pipeline
-  namespace: cop-pipeline
+  namespace: dapo-reference-pipeline
   resourceVersion: '1296617614'
 spec:
   params:
@@ -72,7 +72,7 @@ spec:
       runAfter:
         - git-clone
       taskRef:
-        kind: Task
+        kind: ClusterTask
         name: maven
       workspaces:
         - name: source
