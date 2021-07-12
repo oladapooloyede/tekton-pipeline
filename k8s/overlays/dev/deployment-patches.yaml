@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: dapo-reference-cd-pipeline
-  namespace: dapo-reference-pipeline
+  namespace: ccop-ref-dev
 spec:
   template:
     spec:
