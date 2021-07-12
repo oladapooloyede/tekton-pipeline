@@ -19,7 +19,26 @@ OpenShift Pipelines are based on the Tekton project (https://tekton.dev) - a new
 
 The purpose of this article is demonstrate a reference implementation for the Openshift Pipelines using a sample Quarkus project.
 
-If everything works well, pipeline look like this:-
+If everything works well, the pipeline will look like this:-
 <br/>
 
 <img src="pipeline.png"></img>
+
+<br/>
+
+The pipeline will
+<Ul>
+    <li>Clone the source code repository (https://github.com/oladapooloyede/Second-quarkus-reactive-project.git) on commit to ``dev`` branch</li>
+    <li>Continuous Delivery Reference Implementation on OpenShift using OpenShift GitOps </li>
+</Ul>
+
+
+<h3>Prerequisite</h3>
+<br/>
+
+The following are required to run this reference pipeline (and possibly your pipeline)
+
+<Ul>
+    <li>Source Code Repo - https://github.com/oladapooloyede/Second-quarkus-reactive-project.git</li>
+    <li>Continuous Delivery Reference Implementation on OpenShift using OpenShift GitOps </li>
+</Ul>
