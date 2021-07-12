@@ -28,7 +28,7 @@ If everything works well, the pipeline will look like this:-
 
 The pipeline will
 <Ul>
-    <li>Clone the source code repository (https://github.com/oladapooloyede/Second-quarkus-reactive-project.git) on commit to ``dev`` branch</li>
+    <li>Clone the source code repository (https://github.com/oladapooloyede/Second-quarkus-reactive-project.git) on commit to `dev` branch</li>
     <li>Continuous Delivery Reference Implementation on OpenShift using OpenShift GitOps </li>
 </Ul>
 
