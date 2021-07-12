@@ -1,4 +1,4 @@
-<h1>Continuous Integration and Continuous Delivery (CICD) on OpenShift - Reference Implementation</h1>
+# Continuous Integration and Continuous Delivery (CICD) on OpenShift - Reference Implementation
 
 <br/>
 
@@ -28,12 +28,12 @@ If everything works well, the pipeline will look like this:-
 
 The pipeline will
 <Ul>
-    <li>Clone the source code repository (https://github.com/oladapooloyede/Second-quarkus-reactive-project.git) on commit to `dev` branch</li>
+    <li>Clone the source code repository (https://github.com/oladapooloyede/Second-quarkus-reactive-project.git) on commit to <code>dev</code> branch</li>
     <li>Continuous Delivery Reference Implementation on OpenShift using OpenShift GitOps </li>
 </Ul>
 
 
-<h3>Prerequisite</h3>
+### Prerequisites
 <br/>
 
 The following are required to run this reference pipeline (and possibly your pipeline)
