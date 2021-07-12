@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/component: dapo-reference-cd-pipeline
     app.kubernetes.io/instance: dapo-reference-cd-pipeline
   name: dapo-reference-cd-pipeline
-  namespace: dapo-reference-pipeline
+  namespace: ccop-ref-dev
 spec:
   ports:
   - port: 9090
