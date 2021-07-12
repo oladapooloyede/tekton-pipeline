@@ -26,10 +26,17 @@ If everything works well, the pipeline will look like this:-
 
 <br/>
 
-The pipeline will
+The pipeline will:
 <Ul>
     <li>Clone the source code repository (https://github.com/oladapooloyede/Second-quarkus-reactive-project.git) on commit to <code>dev</code> branch</li>
-    <li>Continuous Delivery Reference Implementation on OpenShift using OpenShift GitOps </li>
+    <li>Run test cases</li>
+    <li>Build artifact for image</li>
+    <li>In parallel scan build artifact for vulnerabilities using a <a href="https://github.com/aquasecurity/trivy"><code>Trivy</code></a> task </li>
+    <li>Build an tag image using the source code <code>commitId</code></li>
+    <li>In parallel scan image locally for vulnerabilities using a <a href="https://github.com/aquasecurity/trivy"><code>Trivy</code></a> task</li>
+    <li>Push image to image repository - artifactory.xxxx.corp.xxx.ca:5073 (<code>ccop-dev</code> repo)</li>
+    <li>Scan image in remote image repository for vulnerabilities using a <a href="https://github.com/aquasecurity/trivy"><code>Trivy</code></a> task</li>
+    <li>Update the repository https://github.com/oladapooloyede/tekton-pipeline.git under the path <code>k8s/overlays/dev</code> to point to the latest image in the Artifactory registry</li> 
 </Ul>
 
 
@@ -39,6 +46,6 @@ The pipeline will
 The following are required to run this reference pipeline (and possibly your pipeline)
 
 <Ul>
-    <li>Source Code Repo - https://github.com/oladapooloyede/Second-quarkus-reactive-project.git</li>
-    <li>Continuous Delivery Reference Implementation on OpenShift using OpenShift GitOps </li>
+    <li>Create an Openshift namespace - (In this case - <code>cop-pipeline</code></li>
+    <li></li>
 </Ul>
