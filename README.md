@@ -82,7 +82,7 @@ The following are required to run this reference pipeline (and possibly your pip
     apiVersion: v1
     metadata:
     name: pipeline
-    namespace: dapo-reference-pipeline
+    namespace: cop-pipeline
     selfLink: /api/v1/namespaces/dapo-reference-pipeline/serviceaccounts/pipeline
     uid: 4ac57ed2-7a68-4b4e-bf61-4c44b44f4d01
     resourceVersion: '133440'
@@ -90,7 +90,7 @@ The following are required to run this reference pipeline (and possibly your pip
     secrets:
     - name: pipeline-token-xxxxx
     - name: pipeline-dockercfg-xxxx
-    - name: github-token
+    - name: gitlab-token
     - name: artifactory-token
     imagePullSecrets:
     - name: pipeline-dockercfg-xxxxx
