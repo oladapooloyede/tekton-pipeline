@@ -1,8 +1,8 @@
-# Continuous Integration and Continuous Delivery (CICD) on OpenShift - Reference Implementation
+<h1>Continuous Integration and Continuous Delivery (CICD) on OpenShift - Reference Implementation </h1>
 
 <br/>
 
-This article will attempt to walk you through a Reference Implementation of OpenShift Continuous Integration and Continuous Delivery (CICD) using a sample Quarkus project as a refe. For the sake of simpicity, the article will be broken down into 2 fascicles. They are as follows:-
+This article will attempt to walk you through a Reference Implementation of OpenShift Continuous Integration and Continuous Delivery (CICD) using a sample Quarkus project on the Dev environment(We attempt to create an article for other environments like UAT and Prod in the future but an understanding this article might make the future articles not so necessary <span style="font-size:12px">&#128521;</span> ). For the sake of simpicity, the article will be broken down into 2 fascicles. They are as follows:-
 
 <Ul>
     <li><a href="#ci">Continuous Integration Reference Implementation on OpenShift using OpenShift Pipelines (Tekton Project)</a></li>
@@ -39,8 +39,15 @@ The pipeline will:
     <li>Update the repository https://github.com/oladapooloyede/tekton-pipeline.git under the path <code>k8s/overlays/dev</code> to point to the latest image in the Artifactory registry</li> 
 </Ul>
 
+<br/>
+The Goal of this of article is:
+<Ul>
+    <li>Understand how to setup a CICD pipeline using OpenShift pipelines(Tekton) and OpenShift GitOps(ArgoCD)</li>
+    <li>Serve as a quickstart for your CICD pipeline</li>
+</Ul>
 
-### Prerequisites
+
+<h3>Prerequisites</h3>
 <br/>
 
 The following are required to run this reference pipeline (and possibly your pipeline)
@@ -48,8 +55,25 @@ The following are required to run this reference pipeline (and possibly your pip
 <Ul>
     <li>Create an Openshift namespace - (In this case - <code>cop-pipeline</code>)</li>
     <li>Create or get access to the reference source code repository (https://github.com/oladapooloyede/Second-quarkus-reactive-project.git)</li>
-    <li>Create or get access to the reference k8s repository for deployment (https://github.com/oladapooloyede/tekton-pipeline.git)</li>
+    <li>Create or get access to the reference k8s repository for continuous deployment (https://github.com/oladapooloyede/tekton-pipeline.git)</li>
+    <li>From your profile page, in the source code repository kindly setup an Access Token with the right permissions as shown in the screenshot below:-<img src="pat.png"></img>
+    (Kindly note that the same Access Token was used for the k8s repository in the reference implementation. If you have different user profiles, you will have to setup multiple Access tokens)</li>
+    <li>Setup a secret in the Openshift namespace (<code>cop-pipeline</code>) for the Access Tokens
+    <pre>
+    <code>
+        apiVersion: v1
+        metadata:
+        name: gitlab-token
+        namespace: cop-pipeline
+        annotations:
+            tekton.dev/git-0: 'https://gitlab.xxx.corp.xxx.ca'
+        data:
+        password: ZHJib0d6Y1diekxuWno1Y2VlSHo=
+        username: MzgxNA==
+        type: kubernetes.io/basic-auth
+    </code>
+    </pre>
+    </li>
 </Ul>
+<br/>
 
-    In the source code repository kindly create the following 
-    In the OpenShift namespace ( i.e. <code>cop-pipeline</code>), kindly
