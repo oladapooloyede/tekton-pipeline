@@ -69,13 +69,34 @@ The following are required to run this reference pipeline (and possibly your pip
     annotations:
         tekton.dev/git-0: 'https://gitlab.xxx.corp.xxx.ca'
     data:
-    password: ZHJib0d6Y1diekxuWno1Y2VlSHo=
-    username: MzgxNA==
+    password: xxxxxxxxxxxxxxxxxx=
+    username: xxxxxx==
     type: kubernetes.io/basic-auth
     </code>
     </pre>
     </li>
-    <li>Add the secrets into the service account <code>pipeline</code> as shown in the yaml file below:-</li>
+    <li>Add the secrets into the service account <code>pipeline</code> as shown in the yaml file below:-
+     <pre>
+    <code>
+    kind: ServiceAccount
+    apiVersion: v1
+    metadata:
+    name: pipeline
+    namespace: dapo-reference-pipeline
+    selfLink: /api/v1/namespaces/dapo-reference-pipeline/serviceaccounts/pipeline
+    uid: 4ac57ed2-7a68-4b4e-bf61-4c44b44f4d01
+    resourceVersion: '133440'
+    creationTimestamp: '2021-07-02T19:16:06Z'
+    secrets:
+    - name: pipeline-token-xxxxx
+    - name: pipeline-dockercfg-xxxx
+    - name: github-token
+    - name: artifactory-token
+    imagePullSecrets:
+    - name: pipeline-dockercfg-xxxxx
+    </code>
+    </pre>
+    </li>
 </Ul>
 <br/>
 
