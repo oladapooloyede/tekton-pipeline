@@ -64,13 +64,13 @@ The following are required to run this reference pipeline (and possibly your pip
     <code>
     apiVersion: v1
     metadata:
-    name: gitlab-token
-    namespace: cop-pipeline
+        name: gitlab-token
+        namespace: cop-pipeline
     annotations:
         tekton.dev/git-0: 'https://gitlab.xxx.corp.xxx.ca'
     data:
-    password: xxxxxxxxxxxxxxxxxx=
-    username: xxxxxx==
+        password: xxxxxxxxxxxxxxxxxx=
+        username: xxxxxx==
     type: kubernetes.io/basic-auth
     </code>
     </pre>
@@ -81,19 +81,15 @@ The following are required to run this reference pipeline (and possibly your pip
     kind: ServiceAccount
     apiVersion: v1
     metadata:
-    name: pipeline
-    namespace: cop-pipeline
-    selfLink: /api/v1/namespaces/dapo-reference-pipeline/serviceaccounts/pipeline
-    uid: 4ac57ed2-7a68-4b4e-bf61-4c44b44f4d01
-    resourceVersion: '133440'
-    creationTimestamp: '2021-07-02T19:16:06Z'
+        name: pipeline
+        namespace: cop-pipeline
     secrets:
-    - name: pipeline-token-xxxxx
-    - name: pipeline-dockercfg-xxxx
-    - name: gitlab-token
-    - name: artifactory-token
+        - name: pipeline-token-xxxxx
+        - name: pipeline-dockercfg-xxxx
+        - name: gitlab-token
+        - name: artifactory-token
     imagePullSecrets:
-    - name: pipeline-dockercfg-xxxxx
+        - name: pipeline-dockercfg-xxxxx
     </code>
     </pre>
     </li>
