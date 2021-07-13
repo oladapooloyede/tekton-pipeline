@@ -46,6 +46,10 @@ The pipeline will:
 The following are required to run this reference pipeline (and possibly your pipeline)
 
 <Ul>
-    <li>Create an Openshift namespace - (In this case - <code>cop-pipeline</code></li>
-    <li></li>
+    <li>Create an Openshift namespace - (In this case - <code>cop-pipeline</code>)</li>
+    <li>Create or get access to the reference source code repository (https://github.com/oladapooloyede/Second-quarkus-reactive-project.git)</li>
+    <li>Create or get access to the reference k8s repository for deployment (https://github.com/oladapooloyede/tekton-pipeline.git)</li>
 </Ul>
+
+    In the source code repository kindly create the following 
+    In the OpenShift namespace ( i.e. <code>cop-pipeline</code>), kindly
