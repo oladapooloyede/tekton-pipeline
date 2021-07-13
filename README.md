@@ -53,27 +53,29 @@ The Goal of this of article is:
 The following are required to run this reference pipeline (and possibly your pipeline)
 
 <Ul>
+    <li>Ask your Cluster Administrator to install <b>Red Hat OpenShift Pipelines</b> incase you can't find it in the <b>Installed Operators</b> <img src="ci-operator.png"></img></li>
     <li>Create an Openshift namespace - (In this case - <code>cop-pipeline</code>)</li>
     <li>Create or get access to the reference source code repository (https://github.com/oladapooloyede/Second-quarkus-reactive-project.git)</li>
     <li>Create or get access to the reference k8s repository for continuous deployment (https://github.com/oladapooloyede/tekton-pipeline.git)</li>
     <li>From your profile page, in the source code repository kindly setup an Access Token with the right permissions as shown in the screenshot below:-<img src="pat.png"></img>
     (Kindly note that the same Access Token was used for the k8s repository in the reference implementation. If you have different user profiles, you will have to setup multiple Access tokens)</li>
-    <li>Setup a secret in the Openshift namespace (<code>cop-pipeline</code>) for the Access Tokens
+    <li>Setup a secret for the Access Token(s) in the Openshift namespace (<code>cop-pipeline</code>) and annotate the secret(s) (<code>tekton.dev/git-0: 'https://gitlab.xxx.corp.xxx.ca</code>) as shown in the yaml file below:-
     <pre>
     <code>
-        apiVersion: v1
-        metadata:
-        name: gitlab-token
-        namespace: cop-pipeline
-        annotations:
-            tekton.dev/git-0: 'https://gitlab.xxx.corp.xxx.ca'
-        data:
-        password: ZHJib0d6Y1diekxuWno1Y2VlSHo=
-        username: MzgxNA==
-        type: kubernetes.io/basic-auth
+    apiVersion: v1
+    metadata:
+    name: gitlab-token
+    namespace: cop-pipeline
+    annotations:
+        tekton.dev/git-0: 'https://gitlab.xxx.corp.xxx.ca'
+    data:
+    password: ZHJib0d6Y1diekxuWno1Y2VlSHo=
+    username: MzgxNA==
+    type: kubernetes.io/basic-auth
     </code>
     </pre>
     </li>
+    <li>Add the secrets into the service account <code>pipeline</code> as shown in the yaml file below:-</li>
 </Ul>
 <br/>
 
