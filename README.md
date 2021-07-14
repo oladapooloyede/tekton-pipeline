@@ -3,12 +3,12 @@
 
 This article will attempt to walk you through a Reference Implementation of OpenShift Continuous Integration and Continuous Delivery (CICD) using a sample Quarkus project. For the sake of simpicity, the article will be broken down into 2 sections. They are as follows:-
 
-* [Continuous Integration Reference Implementation on OpenShift using OpenShift Pipelines (Tekton Project)](#continuous-integration-reference-implementation-on-openShift-using-openShift-pipelines-(tekton-project))
+* [Continuous Integration Reference Implementation on OpenShift using OpenShift Pipelines](#continuous-integration-reference-implementation-on-openShift-using-openShift-pipelines)
   
-* [Continuous Delivery Reference Implementation on OpenShift using OpenShift GitOps (ArgoCD)](#cd)
+* [Continuous Delivery Reference Implementation on OpenShift using OpenShift GitOps](#continuous-delivery-reference-implementation-on-openShift-using-openShift-gitOps)
 
 
-## Continuous Integration Reference Implementation on OpenShift using OpenShift Pipelines (Tekton Project)
+## Continuous Integration Reference Implementation on OpenShift using OpenShift Pipelines
 
 OpenShift Pipelines are based on the Tekton project (https://tekton.dev) - a new, Kubernetes and container native way to manage pipelines.
 
