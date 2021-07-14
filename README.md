@@ -107,7 +107,8 @@ The following are required to run this reference pipeline (and possibly your pip
 
 <h3>Promoting to UAT Environment</h3>
 <p>Kindly refer to this file for the yaml source - <a href="https://gitlab.xxxx.corp.xxx.ca/AI/aiocp/tekton-pipeline/-/blob/master/pipelines/uat-cd-pipeline.yaml">uat-cd-pipeline.yaml</a></p>
-<p>The pipeline will look like this:- <img src="uat-prod-pipeline.png"></img></p>
+<p>The pipeline will look like this:-</p>
+<img src="uat-prod-pipeline.png"></img>
 <p>The pipeline will:
     <ul>
         <li>Skopeo copy from dev image repository to UAT image repository</li>
@@ -119,7 +120,8 @@ The following are required to run this reference pipeline (and possibly your pip
 
 <h3>Promoting to Prod Environment</h3>
 <p>Kindly refer to this file for the yaml source - <a href="https://gitlab.xxxx.corp.xxx.ca/AI/aiocp/tekton-pipeline/-/blob/master/pipelines/prod-cd-pipeline.yaml">prod-cd-pipeline.yaml</a></p>
-<p>The pipeline will look like this:- <img src="uat-prod-pipeline.png"></img></p>
+<p>The pipeline will look like this:-</p>
+<img src="uat-prod-pipeline.png"></img>
 <p>The pipeline will:
     <ul>
         <li>Skopeo copy from dev image repository to UAT image repository</li>
