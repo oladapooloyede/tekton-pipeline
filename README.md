@@ -5,7 +5,7 @@ This article will attempt to walk you through a Reference Implementation of Open
 
 * [Continuous Integration Reference Implementation on OpenShift using OpenShift Pipelines](#continuous-integration-reference-implementation-on-openShift-using-openShift-pipelines)
   
-* [Continuous Delivery Reference Implementation on OpenShift using OpenShift GitOps](#continuous-delivery-reference-implementation-on-openShift-using-openShift-gitOps)
+* [Continuous Delivery Reference Implementation on OpenShift using OpenShift GitOps](#continuous-delivery-reference-implementation-on-openshift-using-openshift-gitOps)
 
 
 ## Continuous Integration Reference Implementation on OpenShift using OpenShift Pipelines
@@ -225,7 +225,7 @@ The pipeline will:
 * Update the repository https://gitlab.xxx.corp.xxx.ca/AI/aiocp/tekton-pipeline.git under the path `k8s/overlays/prod` in `master` branch to point to the latest image in the Artifactory registry 
   
 
-## Continuous Delivery Reference Implementation on OpenShift using OpenShift GitOps (ArgoCD)
+## Continuous Delivery Reference Implementation on OpenShift using OpenShift GitOps
 
 Ask your Cluster Administrator to install **Red Hat OpenShift GitOps** incase you can't find it in the **Installed Operators** ![](gitops-operator.png) </p>
 
