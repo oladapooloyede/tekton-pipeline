@@ -215,6 +215,7 @@ The pipeline will:
 Kindly refer to this file for the yaml source - [prod-cd-pipeline.yaml](https://gitlab.xxx.corp.xxx.ca/AI/aiocp/tekton-pipeline/-/blob/master/pipelines/prod-cd-pipeline.yaml)
 
 The pipeline will look like this:-
+
 ![](uat-prod-pipeline.png)
 
 The pipeline will:
