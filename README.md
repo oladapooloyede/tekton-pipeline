@@ -84,7 +84,7 @@ The following are required to run this reference pipeline (and possibly your pip
     ```
 
 ### Run CI Pipeline on Dev Environment
-You can either manually run the pipeline or [Creating webhooks on Gitlab to trigger the pipeline run](#wh) on Gitlab to trigger the pipeline run. Kindly refer to this for a source yaml file for the pipeline -
+You can either manually run the pipeline or [Creating webhooks on Gitlab to trigger the pipeline run](#creating-webhooks-on-gitlab-to-trigger-the-pipeline-run) on Gitlab to trigger the pipeline run. Kindly refer to this for a source yaml file for the pipeline -
 [ci-pipeline.yaml](https://gitlab.xxx.corp.xxx.ca/AI/aiocp/tekton-pipeline/-/blob/master/pipelines/ci-pipeline.yaml)
 
 The screenshot below shows a Successful Pipeline Run on the Dev Environment
