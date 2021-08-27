@@ -1,4 +1,4 @@
-## Continuous Integration and Continuous Delivery Reference Implementation on OpenShift using OpenShift Pipelines
+# Continuous Integration and Continuous Delivery Reference Implementation on OpenShift using OpenShift Pipelines
 
 This article will attempt to walk you through a Reference Implementation of OpenShift Continuous Integration and Continuous Delivery (CICD) using a sample Quarkus project. For the sake of simpicity, the article will be broken down into 2 sections. They are as follows:-
 
@@ -24,7 +24,7 @@ The pipeline will:
 
 - In parallel scan image locally for vulnerabilities using a `Trivy` task
 
-- Push image to image repository - artifactory.xxx.corp.bce.ca:5073 (`ccop-dev` repo)
+- Push image to image repository - artifactory.xxx.corp.xxx.ca:5073 (`ccop-dev` repo)
 
 - Scan image in remote image repository for vulnerabilities using a `Trivy` task
 
@@ -48,14 +48,14 @@ The following are required to run this reference pipeline (and possibl
 - From your profile page, in the source code repository kindly setup an Access Token with the right permissions as shown in the screenshot below:-[](pat.png)
 (Kindly note that the same Access Token was used for the k8s repository in the reference implementation. If you have different user profiles, you will have to setup multiple Access tokens)
 
-- Setup a secret for the Access Token(s) in the Openshift namespace (`cop-pipeline`) and annotate the secret(s) (`tekton.dev/git-0: 'https://gitlab.xxx.corp.bce.ca'`) as shown in the yaml file below:-  
+- Setup a secret for the Access Token(s) in the Openshift namespace (`cop-pipeline`) and annotate the secret(s) (`tekton.dev/git-0: 'https://gitlab.xxx.corp.xxx.ca'`) as shown in the yaml file below:-  
 ```yaml
 apiVersion: v1
 metadata:
     name: gitlab-token
     namespace: cop-pipeline
 annotations:
-    tekton.dev/git-0: 'https://gitlab.xxx.corp.bce.ca'
+    tekton.dev/git-0: 'https://gitlab.xxx.corp.xxx.ca'
 data:
     password: xxxxxxxxxxxxxxxxxx=
     username: xxxxxx==
@@ -465,7 +465,7 @@ spec:
         - namespace: ccop-ref-uat
         server: 'https://kubernetes.default.svc'
     sourceRepos:
-        - 'https://gitlab.xxx.corp.bce.ca/AI/aiocp/tekton-pipeline.git'
+        - 'https://gitlab.xxx.corp.xxx.ca/AI/aiocp/tekton-pipeline.git'
     status: {}
 ```
 ``` yaml
@@ -479,7 +479,7 @@ spec:
         server: 'https://kubernetes.default.svc'
     source:
         path: k8s/overlays/uat
-        repoURL: 'https://gitlab.xxx.corp.bce.ca/AI/aiocp/tekton-pipeline.git'
+        repoURL: 'https://gitlab.xxx.corp.xxx.ca/AI/aiocp/tekton-pipeline.git'
         targetRevision: uat
     project: uat-project
     syncPolicy:
@@ -509,7 +509,7 @@ spec:
         - namespace: ccop-ref-prod
         server: 'https://kubernetes.default.svc'
     sourceRepos:
-        - 'https://gitlab.xxx.corp.bce.ca/AI/aiocp/tekton-pipeline.git'
+        - 'https://gitlab.xxx.corp.xxx.ca/AI/aiocp/tekton-pipeline.git'
     status: {}
 ```
 ``` yaml
@@ -523,7 +523,7 @@ spec:
         server: 'https://kubernetes.default.svc'
     source:
         path: k8s/overlays/prod
-        repoURL: 'https://gitlab.xxx.corp.bce.ca/AI/aiocp/tekton-pipeline.git'
+        repoURL: 'https://gitlab.xxx.corp.xxx.ca/AI/aiocp/tekton-pipeline.git'
         targetRevision: master
     project: prod-project
     syncPolicy:
