@@ -3,13 +3,11 @@ kind: TriggerTemplate
 metadata:
   name: ci-pipeline-template
   namespace: cop-pipeline
-  resourceVersion: '1310382726'
-  selfLink: >-
-    /apis/triggers.tekton.dev/v1alpha1/namespaces/cop-pipeline/triggertemplates/ci-pipeline-template
 spec:
   params:
     - name: git-repo-url
     - name: git-revision
+    - name: short-commit-id
   resourcetemplates:
     - apiVersion: tekton.dev/v1beta1
       kind: PipelineRun
@@ -21,21 +19,23 @@ spec:
             value: $(tt.params.git-repo-url)
           - name: git-source-revision
             value: $(tt.params.git-revision)
+          - name: short-commit-id
+            value: $(tt.params.short-commit-id)
           - name: SONAR_URL
-            value: 'http://sonarqube:9000'
+            value: 'http://sonarqube-cicd-tools.apps.xxxxx.xxxx.dev.xxx.ca'
           - name: SONAR_AUTH_TOKEN
-            value: 128934bb2d1a306ad39990b6badb6028cf1ceb02
+            value: cb98fc7b68ea37feb56d151e10b87d6dc596f4b2
           - name: LOCAL_SCAN_PATH
             value: ./
           - name: LOCAL_IMAGE_SCAN_PATH
             value: ./
           - name: REMOTE_IMAGE_URL
             value: >-
-              image-registry.openshift-image-registry.svc:5000/cop-pipeline/dapo-app-image
+              artifactory.XXXX.corp.XXX.ca:5073/ccop-dev/quarkus-ref-image-dev:$(tt.params.git-revision)
           - name: SEVERITY_LEVELS
-            value: CRITICAL
+            value: LOW
           - name: KUSTOMIZE_GIT_URL
-            value: 'https://github.com/oladapooloyede/Second-quarkus-reactive-project.git'
+            value: 'https://gitlab.XXX.corp.XXX.ca/AI/aiocp/tekton-pipeline.git'
           - name: KUSTOMIZE_GIT_CONTEXT_DIR
             value: k8s/overlays/dev
         pipelineRef:
@@ -43,12 +43,12 @@ spec:
         workspaces:
           - name: app-source
             persistentVolumeClaim:
-              claimName: workspace-pvc2
+              claimName: source-repo-pvc
           - name: maven-settings
             persistentVolumeClaim:
               claimName: maven-settings-pvc
           - name: shared-image-repo
             persistentVolumeClaim:
-              claimName: workspace-pvc2
+              claimName: source-repo-pvc
           - emptyDir: {}
             name: kustomize-repo
