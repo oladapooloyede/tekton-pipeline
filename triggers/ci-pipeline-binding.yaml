@@ -3,11 +3,11 @@ kind: TriggerBinding
 metadata:
   name: ci-pipeline-binding
   namespace: cop-pipeline
-  selfLink: >-
-    /apis/triggers.tekton.dev/v1alpha1/namespaces/cop-pipeline/triggerbindings/ci-pipeline-binding
 spec:
   params:
     - name: git-repo-url
       value: $(body.repository.git_http_url)
+    - name: short-commit-id
+      value: $(extensions.short_commit)
     - name: git-revision
       value: $(body.after)
