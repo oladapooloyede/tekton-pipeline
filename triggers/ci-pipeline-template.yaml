@@ -31,7 +31,7 @@ spec:
             value: ./
           - name: REMOTE_IMAGE_URL
             value: >-
-              artifactory.XXXX.corp.XXX.ca:5073/ccop-dev/quarkus-ref-image-dev:$(tt.params.git-revision)
+              artifactory.XXXX.corp.XXX.ca:5073/ccop-dev/quarkus-ref-image-dev:$(tt.params.short-commit-id)
           - name: SEVERITY_LEVELS
             value: LOW
           - name: KUSTOMIZE_GIT_URL
