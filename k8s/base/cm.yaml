@@ -1,0 +1,7 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: quarkus-app-cm
+  namespace: ccop-ref-dev
+data:
+  QUARKUS_DATASOURCE_REACTIVE_URL: 'postgresql://postgresql:5432/testdb'
