@@ -2,8 +2,7 @@ apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
   name: ci-pipeline
-  namespace: dapo-reference-pipeline
-  resourceVersion: '1296617614'
+  namespace: cop-pipeline
 spec:
   params:
     - description: git url to clone
@@ -13,11 +12,14 @@ spec:
       description: 'git revision to checkout (branch, tag, sha, ref…)'
       name: git-source-revision
       type: string
-    - default: 'http://sonarqube:9000'
+    - description: image tag - truncated commit Id
+      name: short-commit-id
+      type: string
+    - default: 'http://sonarqube-cicd-tools.apps.ocp-dev-ade.xxxdev.dev.xxx.ca'
       description: SonarQube url for static code analysis
       name: SONAR_URL
       type: string
-    - default: 128934bb2d1a306ad39990b6badb6028cf1ceb02
+    - default: cb98fc7b68ea37feb56d151e10b87d6dc596f4b2
       description: SonarQube authentication token for static code analysis
       name: SONAR_AUTH_TOKEN
       type: string
@@ -29,22 +31,29 @@ spec:
       description: image path
       name: LOCAL_IMAGE_SCAN_PATH
       type: string
-    - default: >-
-        image-registry.openshift-image-registry.svc:5000/cop-pipeline/dapo-app-image
+    - default: 'artifactory.xxx.corp.xxx.ca:5073/ccop-dev/quarkus-ref-image-dev'
       description: image path
       name: REMOTE_IMAGE_URL
       type: string
-    - default: 'HIGH,CRITICAL'
+    - default: 'artifactory.xxx.corp.xxx.ca:5073/ccop-dev/quarkus-ref-image-dev'
+      description: image path for security scanning
+      name: SCAN_IMAGE_URL
+      type: string
+    - default: UNKNOWN
       description: vulnerability severity level
       name: SEVERITY_LEVELS
       type: string
-    - default: 'https://github.com/oladapooloyede/Second-quarkus-reactive-project.git'
+    - default: 'https://gitlab.xxx.corp.xxx.ca/AI/aiocp/tekton-pipeline.git'
       description: Kustomize git repo for CD
       name: KUSTOMIZE_GIT_URL
       type: string
     - default: k8s/overlays/dev
       description: Kustomize git repo context directory for CD
       name: KUSTOMIZE_GIT_CONTEXT_DIR
+      type: string
+    - default: dev
+      description: Kustomize git repo branch
+      name: KUSTOMIZE_GIT_BRANCH
       type: string
   tasks:
     - name: git-clone
@@ -72,7 +81,27 @@ spec:
       runAfter:
         - git-clone
       taskRef:
-        kind: ClusterTask
+        kind: Task
+        name: maven
+      workspaces:
+        - name: source
+          workspace: app-source
+        - name: maven-settings
+          workspace: maven-settings
+    - name: static-code-analysis
+      params:
+        - name: GOALS
+          value:
+            - 'sonar:sonar'
+            - '-Dsonar.projectKey=ci-pipeline-ref-arc'
+            - '-Dsonar.host.url=$(params.SONAR_URL)'
+            - '-Dsonar.login=$(params.SONAR_AUTH_TOKEN)'
+            - '-Dsonar.exclusions=**/*.java'
+            - '-s  $(workspaces.maven-settings.path)/settings.xml'
+      runAfter:
+        - run-test-cases
+      taskRef:
+        kind: Task
         name: maven
       workspaces:
         - name: source
@@ -87,7 +116,7 @@ spec:
             - package
             - '-Dquarkus.native.container-build=true'
       runAfter:
-        - run-test-cases
+        - static-code-analysis
       taskRef:
         kind: ClusterTask
         name: maven
@@ -149,7 +178,7 @@ spec:
         - name: IMAGE
           value: $(params.REMOTE_IMAGE_URL)
         - name: IMAGE_TAG
-          value: $(params.git-source-revision)
+          value: $(params.short-commit-id)
         - name: TLSVERIFY
           value: 'false'
       runAfter:
@@ -169,7 +198,7 @@ spec:
         - name: SEVERITY_LEVELS
           value: $(params.SEVERITY_LEVELS)
         - name: SCAN_PATH_OR_IMAGE_URL
-          value: '$(params.REMOTE_IMAGE_URL):$(params.git-source-revision)'
+          value: '$(params.SCAN_IMAGE_URL):$(params.short-commit-id)'
         - name: IGNORE_UNFIXED
           value: 'true'
       runAfter:
@@ -184,10 +213,12 @@ spec:
       params:
         - name: gitRepositoryUrl
           value: $(params.KUSTOMIZE_GIT_URL)
+        - name: gitRepositoryRevision
+          value: $(params.KUSTOMIZE_GIT_BRANCH)
         - name: gitPath
           value: $(params.KUSTOMIZE_GIT_CONTEXT_DIR)
         - name: imageTag
-          value: $(params.git-source-revision)
+          value: $(params.short-commit-id)
         - name: verbose
           value: 'true'
       runAfter:
