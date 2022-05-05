@@ -26,6 +26,11 @@ spec:
     spec:
       containers:
       - image: <PATCH_ME>
+        envFrom:
+          - secretRef:
+              name: quarkus-dev-secret
+          - configMapRef:
+              name: quarkus-app-cm
         imagePullPolicy: IfNotPresent
         name: dapo-reference-cd-pipeline
         terminationMessagePath: /dev/termination-log
