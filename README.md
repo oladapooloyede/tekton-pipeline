@@ -8,7 +8,8 @@ This article will attempt to walk you through a Reference Implementati
 
 ## Continuous Integration Reference Implementation on OpenShift using OpenShift Pipelines
 
-OpenShift Pipelines are based on the [Tekton project](https://tekton.dev)  - a new, Kubernetes and container native way to manage pipelines.The purpose of this article is demonstrate a reference implementation for the Openshift Pipelines using a sample Quarkus project.The pipeline will look like this:- ![](ci-pipeline-dev.png)
+OpenShift Pipelines are based on the [Tekton project](https://tekton.dev)  - a new, Kubernetes and container native way to manage pipelines.The purpose of this article is demonstrate a reference implementation for the Openshift Pipelines using a sample Quarkus project.The pipeline will look like this:- 
+![](ci-pipeline-dev.png)
 
 The pipeline will:
 
