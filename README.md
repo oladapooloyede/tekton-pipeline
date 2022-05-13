@@ -45,8 +45,9 @@ The following are required to run this reference pipeline (and possibl
 - Create or get access to the reference source code repository
 
 - Create or get access to the reference k8s repository
-- From your profile page, in the source code repository kindly setup an Access Token with the right permissions as shown in the screenshot below: ![](pat.png)
-(Kindly note that the same Access Token was used for the k8s repository in the reference implementation. If you have different user profiles, you will have to setup multiple Access tokens)
+- From your profile page, in the source code repository kindly setup an Access Token with the right permissions as shown in the screenshot below: 
+![api, read_api, read_repository, write_repository](pat2.png)
+(Note that the same Access Token was used for the k8s repository in the reference implementation. If you have different user profiles, you will have to setup multiple Access tokens)
 
 - Setup a secret for the Access Token(s) in the Openshift namespace (`cop-pipeline`) and annotate the secret(s) (`tekton.dev/git-0: 'https://gitlab.xxx.corp.xxx.ca'`) as shown in the yaml file below:-  
 ```yaml
@@ -82,9 +83,8 @@ imagePullSecrets:
 
 You can either manually run the pipeline or Creating webhooks on Gitlab to trigger the pipeline run on Gitlab to trigger the pipeline run. Kindly refer to this source yaml file - `pipelines/ci-pipeline.yaml` in the k8s repository
 
-The screenshot below shows a Successful Pipeline Run on the Dev Environment [](pipeline.png)
-
-The screenshot below shows a Successful Pipeline Run on the Dev Environment [](ci-dev-pipeline-failed.png)
+The screenshot below shows a Successful Pipeline Run on the Dev Environment ![](pipeline.png)
+The screenshot below shows a Successful Pipeline Run on the Dev Environment ![](ci-dev-pipeline-failed.png)
 
 ### Creating webhooks on Gitlab to trigger the pipeline run
 
@@ -181,14 +181,122 @@ spec:
 ```
 
 - On the Gitlab source code repository, go to `Settings/webhooks` and setup a webhook for the repo to initiate a Pipeline Run on commit. Kindly see screenshot below:-
-[](webhook.png)
+![](webhook.png)
 
-### Promoting to UAT Environment
+### Promoting to Staging Environment
 
-Kindly refer to this source yaml file - `pipelines/uat-cd-pipeline.yaml` in the k8s repository
+Refer to the source yaml below
+```
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: uat-cd-pipeline
+  namespace: cop-pipeline
+spec:
+  params:
+    - description: Git commitId of the change to deploy
+      name: IMAGE_TAG
+      type: string
+    - default: >-
+        image-registry.openshift-image-registry.svc:xxxx/cop-pipeline/dapo-app-image
+      description: Source image url without tag
+      name: SRC_IMAGE_URL
+      type: string
+    - default: 'image-registry.openshift-image-registry.svc:xxxx/ccop-dev/dapo-app-image-uat'
+      description: Destination image url without tag
+      name: DEST_IMAGE_URL
+      type: string
+    - default: UNKNOWN
+      description: Image Scan severity levels
+      name: SEVERITY_LEVELS
+      type: string
+    - default: 'https://gitlab.xxx.xxxx.xxx.ca/tekton-pipeline.git'
+      description: Kustomize git repo for CD
+      name: KUSTOMIZE_GIT_URL
+      type: string
+    - default: k8s/overlays/uat
+      description: Kustomize git repo context directory for CD
+      name: KUSTOMIZE_GIT_CONTEXT_DIR
+      type: string
+    - default: uat
+      description: Kustomize git repo branch
+      name: KUSTOMIZE_GIT_BRANCH
+      type: string
+  tasks:
+    - name: skopeo-copy
+      params:
+        - name: srcImageURL
+          value: 'docker://$(params.SRC_IMAGE_URL):$(params.IMAGE_TAG)'
+        - name: destImageURL
+          value: 'docker://$(params.DEST_IMAGE_URL):$(params.IMAGE_TAG)'
+        - name: srcTLSverify
+          value: 'false'
+        - name: destTLSverify
+          value: 'false'
+      taskRef:
+        kind: ClusterTask
+        name: skopeo-copy
+      workspaces:
+        - name: images-url
+          workspace: images-url
+    - name: trivy-scan
+      params:
+        - name: NO_PROXY
+          value: 'localhost,127.0.0.1'
+        - name: HTTP_PROXY
+          value: ''
+        - name: INSECURE_REGISTRY
+          value: 'false'
+        - name: SEVERITY_LEVELS
+          value: $(params.SEVERITY_LEVELS)
+        - name: SCAN_TYPE
+          value: image
+        - name: TRIVY_IMAGE
+          value: >-
+            image-registry.openshift-image-registry.svc:5000/cop-pipeline/trivy-image:v0.18.3
+        - name: SCAN_PATH_OR_IMAGE_URL
+          value: '$(params.DEST_IMAGE_URL):$(params.IMAGE_TAG)'
+        - name: IGNORE_UNFIXED
+          value: 'false'
+      runAfter:
+        - skopeo-copy
+      taskRef:
+        kind: Task
+        name: trivy-scan
+      workspaces:
+        - name: local-image-repo
+          workspace: image-repo
+    - name: update-kustomize-repo
+      params:
+        - name: gitRepositoryUrl
+          value: $(params.KUSTOMIZE_GIT_URL)
+        - name: gitRepositoryRevision
+          value: $(params.KUSTOMIZE_GIT_BRANCH)
+        - name: gitPath
+          value: $(params.KUSTOMIZE_GIT_CONTEXT_DIR)
+        - name: fileName
+          value: deployment-patches.yaml
+        - name: imageTag
+          value: $(params.IMAGE_TAG)
+        - name: verbose
+          value: 'true'
+      runAfter:
+        - trivy-scan
+      taskRef:
+        kind: Task
+        name: update-kustomize-repo
+      workspaces:
+        - name: repository
+          workspace: kustomize-repo
+  workspaces:
+    - name: images-url
+    - name: image-repo
+    - name: kustomize-repo
+```
 
-The pipeline will look like this:-
-[](uat-prod-pipeline.png)
+The pipeline will look like this:
+
+![](uat-prod-pipeline.png)
 
 The pipeline will:   
 
@@ -200,10 +308,117 @@ The pipeline will:   
 
 ### Promoting to Prod Environment
 
-Kindly refer to this source yaml file - `pipelines/prod-cd-pipeline.yaml` in the k8s repository)
+Refer to the source yaml below:-
+```
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: prod-cd-pipeline
+  namespace: cop-pipeline
+spec:
+  params:
+    - description: Git commitId of the change to deploy
+      name: IMAGE_TAG
+      type: string
+    - default: >-
+        image-registry.openshift-image-registry.svc:xxxx/cop-pipeline/dapo-app-image
+      description: Source image url without tag
+      name: SRC_IMAGE_URL
+      type: string
+    - default: 'image-registry.openshift-image-registry.svc:xxxx/ccop-dev/dapo-app-image-prod'
+      description: Destination image url without tag
+      name: DEST_IMAGE_URL
+      type: string
+    - default: UNKNOWN
+      description: Image Scan severity levels
+      name: SEVERITY_LEVELS
+      type: string
+    - default: 'https://gitlab.xxx.xxxx.xxx.ca/tekton-pipeline.git'
+      description: Kustomize git repo for CD
+      name: KUSTOMIZE_GIT_URL
+      type: string
+    - default: k8s/overlays/prod
+      description: Kustomize git repo context directory for CD
+      name: KUSTOMIZE_GIT_CONTEXT_DIR
+      type: string
+    - default: prod
+      description: Kustomize git repo branch
+      name: KUSTOMIZE_GIT_BRANCH
+      type: string
+  tasks:
+    - name: skopeo-copy
+      params:
+        - name: srcImageURL
+          value: 'docker://$(params.SRC_IMAGE_URL):$(params.IMAGE_TAG)'
+        - name: destImageURL
+          value: 'docker://$(params.DEST_IMAGE_URL):$(params.IMAGE_TAG)'
+        - name: srcTLSverify
+          value: 'false'
+        - name: destTLSverify
+          value: 'false'
+      taskRef:
+        kind: ClusterTask
+        name: skopeo-copy
+      workspaces:
+        - name: images-url
+          workspace: images-url
+    - name: trivy-scan
+      params:
+        - name: NO_PROXY
+          value: 'localhost,127.0.0.1'
+        - name: HTTP_PROXY
+          value: ''
+        - name: INSECURE_REGISTRY
+          value: 'false'
+        - name: SEVERITY_LEVELS
+          value: $(params.SEVERITY_LEVELS)
+        - name: SCAN_TYPE
+          value: image
+        - name: TRIVY_IMAGE
+          value: >-
+            image-registry.openshift-image-registry.svc:5000/cop-pipeline/trivy-image:v0.18.3
+        - name: SCAN_PATH_OR_IMAGE_URL
+          value: '$(params.DEST_IMAGE_URL):$(params.IMAGE_TAG)'
+        - name: IGNORE_UNFIXED
+          value: 'false'
+      runAfter:
+        - skopeo-copy
+      taskRef:
+        kind: Task
+        name: trivy-scan
+      workspaces:
+        - name: local-image-repo
+          workspace: image-repo
+    - name: update-kustomize-repo
+      params:
+        - name: gitRepositoryUrl
+          value: $(params.KUSTOMIZE_GIT_URL)
+        - name: gitRepositoryRevision
+          value: $(params.KUSTOMIZE_GIT_BRANCH)
+        - name: gitPath
+          value: $(params.KUSTOMIZE_GIT_CONTEXT_DIR)
+        - name: fileName
+          value: deployment-patches.yaml
+        - name: imageTag
+          value: $(params.IMAGE_TAG)
+        - name: verbose
+          value: 'true'
+      runAfter:
+        - trivy-scan
+      taskRef:
+        kind: Task
+        name: update-kustomize-repo
+      workspaces:
+        - name: repository
+          workspace: kustomize-repo
+  workspaces:
+    - name: images-url
+    - name: image-repo
+    - name: kustomize-repo
+```
 
 The pipeline will look like this:-
-[](uat-prod-pipeline.png)
+![](uat-prod-pipeline.png)
 
 The pipeline will:  
 
@@ -215,7 +430,7 @@ The pipeline will:  
 
 ## Continuous Delivery Reference Implementation on OpenShift using OpenShift GitOps
 
-Ask your Cluster Administrator to install **Red Hat OpenShift GitOps** incase you can't find it in the **Installed Operators** [](gitops-operator.png)
+Ask your Cluster Administrator to install **Red Hat OpenShift GitOps** incase you can't find it in the **Installed Operators** ![](gitops-operator.png)
 
 ### Setting up a Tenant ArgoCD instance
 
@@ -351,27 +566,27 @@ Keycloak communicates with OpenShift Oauth Server through proxy. Below are some 
 #### Login with OpenShift
 Go to the OpenShift Console -> Networking -> Routes. Click on the <argocd-instance>-server route url to access the Argo CD UI.
 ​
-[](1.png)
+![](1.png)
 
 ​
 You will be redirected to Argo CD Login Page.
 ​
 You can see an option to LOG IN VIA KEYCLOAK apart from the usual ArgoCD login. Click on the button. (Please choose a different browser or incognito window to avoid caching issues).
 ​
-[](2.png)
+![](2.png)
 
 ​
 You will be redirected to a new page which provides you an option to Login with OpenShift. Click on the button to get redirected to the OpenShift Login Page.
 ​
-[](3.png)
+![](3.png)
 
 ​
-[](4.png)
+![](4.png)
 
 ​
 Provide the OpenShift login credentials to get redirected to Argo CD. You can look at the user details by clicking on the User Information Tab as shown below.
 ​
-[](5.png)
+![](5.png)
 
 
 #### Configure Argo CD RBAC
@@ -403,10 +618,10 @@ Kindly carry out the following activities:-
 - Kindly setup the namespace `ccop-ref-dev` (if it does not exist) on Openshift for deployment using this label `argocd.argoproj.io/managed-by: <argocd instance namespace>` on Front Door. If the namespace is not labelled with this value - `argocd.argoproj.io/managed-by: <argocd instance namespace>` on Front Door, after creation, kindly reach out to the cluster admin.
 
 - Log into  Argo CD cluster, go to `Settings/Repositories` and click on the button `+ CONNECT REPO USING HTTPS` in order to permit connection to your k8s repo. Kindly see screenshots below:- 
-[](argocd-repo-create.png) 
-[](argocd-repo-list.png)
+![](argocd-repo-create.png) 
+![](argocd-repo-list.png)
 
-- Kindly create the following on the dev environment:-
+- Create the following in <argocd instance namespace> on the dev environment:
 ```yaml
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
@@ -444,13 +659,13 @@ spec:
         selfHeal: true
 ```
 
-### Deployment on UAT Environment
+### Deployment on Staging Environment
 
 Kindly carry out the following activities:-
 
 - Kindly setup the namespace `ccop-ref-uat` (if it does not exist) on Openshift for deployment using this label `argocd.argoproj.io/managed-by: <argocd instance namespace>` on Front Door. If the namespace is not labelled with this value - `argocd.argoproj.io/managed-by: <argocd instance namespace>` on Front Door, after creation, kindly reach out to the cluster admin.
 
-- Kindly create the following on the dev environment:- 
+- Kindly create the following n the <argocd instance namespace> of the Staging environment:- 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
@@ -488,13 +703,13 @@ spec:
         selfHeal: true
 ```
 
-### Deployment on Prod Environment
+### Deployment on Production Environment
 
 Kindly carry out the following activities:-
 
 - Kindly setup the namespace `ccop-ref-prod` (if it does not exist) on Openshift for deployment using this label `argocd.argoproj.io/managed-by: <argocd instance namespace>` on Front Door. If the namespace is not labelled with this value - `argocd.argoproj.io/managed-by: <argocd instance namespace>` on Front Door, after creation, kindly reach out to the cluster admin.
 
-- Kindly create the following on the dev environment:- 
+- Kindly create the following in the <argocd instance namespace> of the Production environment:- 
 ``` yaml
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
