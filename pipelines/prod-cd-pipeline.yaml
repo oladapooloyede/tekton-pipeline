@@ -1,0 +1,105 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: prod-cd-pipeline
+  namespace: cop-pipeline
+spec:
+  params:
+    - description: Git commitId of the change to deploy
+      name: IMAGE_TAG
+      type: string
+    - default: >-
+        image-registry.openshift-image-registry.svc:xxxx/cop-pipeline/dapo-app-image
+      description: Source image url without tag
+      name: SRC_IMAGE_URL
+      type: string
+    - default: 'image-registry.openshift-image-registry.svc:xxxx/ccop-dev/dapo-app-image-prod'
+      description: Destination image url without tag
+      name: DEST_IMAGE_URL
+      type: string
+    - default: UNKNOWN
+      description: Image Scan severity levels
+      name: SEVERITY_LEVELS
+      type: string
+    - default: 'https://gitlab.xxx.xxxx.xxx.ca/tekton-pipeline.git'
+      description: Kustomize git repo for CD
+      name: KUSTOMIZE_GIT_URL
+      type: string
+    - default: k8s/overlays/prod
+      description: Kustomize git repo context directory for CD
+      name: KUSTOMIZE_GIT_CONTEXT_DIR
+      type: string
+    - default: prod
+      description: Kustomize git repo branch
+      name: KUSTOMIZE_GIT_BRANCH
+      type: string
+  tasks:
+    - name: skopeo-copy
+      params:
+        - name: srcImageURL
+          value: 'docker://$(params.SRC_IMAGE_URL):$(params.IMAGE_TAG)'
+        - name: destImageURL
+          value: 'docker://$(params.DEST_IMAGE_URL):$(params.IMAGE_TAG)'
+        - name: srcTLSverify
+          value: 'false'
+        - name: destTLSverify
+          value: 'false'
+      taskRef:
+        kind: ClusterTask
+        name: skopeo-copy
+      workspaces:
+        - name: images-url
+          workspace: images-url
+    - name: trivy-scan
+      params:
+        - name: NO_PROXY
+          value: 'localhost,127.0.0.1'
+        - name: HTTP_PROXY
+          value: ''
+        - name: INSECURE_REGISTRY
+          value: 'false'
+        - name: SEVERITY_LEVELS
+          value: $(params.SEVERITY_LEVELS)
+        - name: SCAN_TYPE
+          value: image
+        - name: TRIVY_IMAGE
+          value: >-
+            image-registry.openshift-image-registry.svc:5000/cop-pipeline/trivy-image:v0.18.3
+        - name: SCAN_PATH_OR_IMAGE_URL
+          value: '$(params.DEST_IMAGE_URL):$(params.IMAGE_TAG)'
+        - name: IGNORE_UNFIXED
+          value: 'false'
+      runAfter:
+        - skopeo-copy
+      taskRef:
+        kind: Task
+        name: trivy-scan
+      workspaces:
+        - name: local-image-repo
+          workspace: image-repo
+    - name: update-kustomize-repo
+      params:
+        - name: gitRepositoryUrl
+          value: $(params.KUSTOMIZE_GIT_URL)
+        - name: gitRepositoryRevision
+          value: $(params.KUSTOMIZE_GIT_BRANCH)
+        - name: gitPath
+          value: $(params.KUSTOMIZE_GIT_CONTEXT_DIR)
+        - name: fileName
+          value: deployment-patches.yaml
+        - name: imageTag
+          value: $(params.IMAGE_TAG)
+        - name: verbose
+          value: 'true'
+      runAfter:
+        - trivy-scan
+      taskRef:
+        kind: Task
+        name: update-kustomize-repo
+      workspaces:
+        - name: repository
+          workspace: kustomize-repo
+  workspaces:
+    - name: images-url
+    - name: image-repo
+    - name: kustomize-repo
