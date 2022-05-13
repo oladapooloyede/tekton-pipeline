@@ -81,7 +81,245 @@ imagePullSecrets:
 
 ### Run CI Pipeline on Dev Environment
 
-You can either manually run the pipeline or Creating webhooks on Gitlab to trigger the pipeline run on Gitlab to trigger the pipeline run. Kindly refer to this source yaml file - `pipelines/ci-pipeline.yaml` in the k8s repository
+You can either manually run the pipeline or Creating webhooks on Gitlab to trigger the pipeline run on Gitlab to trigger the pipeline run. Kindly refer to the source yaml below:
+```
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: ci-pipeline
+  namespace: cop-pipeline
+spec:
+  params:
+    - description: git url to clone
+      name: git-source-url
+      type: string
+    - default: master
+      description: 'git revision to checkout (branch, tag, sha, ref…)'
+      name: git-source-revision
+      type: string
+    - description: image tag - truncated commit Id
+      name: short-commit-id
+      type: string
+    - default: 'http://sonarqube-cicd-tools.apps.ocp-dev-ade.xxxdev.dev.xxx.ca'
+      description: SonarQube url for static code analysis
+      name: SONAR_URL
+      type: string
+    - default: cb98fc7b68ea37feb56d151e10b87d6dc596f4b2
+      description: SonarQube authentication token for static code analysis
+      name: SONAR_AUTH_TOKEN
+      type: string
+    - default: ./
+      description: image path
+      name: LOCAL_SCAN_PATH
+      type: string
+    - default: ./
+      description: image path
+      name: LOCAL_IMAGE_SCAN_PATH
+      type: string
+    - default: 'artifactory.xxx.corp.xxx.ca:5073/ccop-dev/quarkus-ref-image-dev'
+      description: image path
+      name: REMOTE_IMAGE_URL
+      type: string
+    - default: 'artifactory.xxx.corp.xxx.ca:5073/ccop-dev/quarkus-ref-image-dev'
+      description: image path for security scanning
+      name: SCAN_IMAGE_URL
+      type: string
+    - default: UNKNOWN
+      description: vulnerability severity level
+      name: SEVERITY_LEVELS
+      type: string
+    - default: 'https://gitlab.xxx.corp.xxx.ca/AI/aiocp/tekton-pipeline.git'
+      description: Kustomize git repo for CD
+      name: KUSTOMIZE_GIT_URL
+      type: string
+    - default: k8s/overlays/dev
+      description: Kustomize git repo context directory for CD
+      name: KUSTOMIZE_GIT_CONTEXT_DIR
+      type: string
+    - default: dev
+      description: Kustomize git repo branch
+      name: KUSTOMIZE_GIT_BRANCH
+      type: string
+  tasks:
+    - name: git-clone
+      params:
+        - name: url
+          value: $(params.git-source-url)
+        - name: revision
+          value: $(params.git-source-revision)
+        - name: sslVerify
+          value: 'false'
+        - name: noProxy
+          value: 'true'
+      taskRef:
+        kind: ClusterTask
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: app-source
+    - name: run-test-cases
+      params:
+        - name: GOALS
+          value:
+            - clean
+            - test
+      runAfter:
+        - git-clone
+      taskRef:
+        kind: Task
+        name: maven
+      workspaces:
+        - name: source
+          workspace: app-source
+        - name: maven-settings
+          workspace: maven-settings
+    - name: static-code-analysis
+      params:
+        - name: GOALS
+          value:
+            - 'sonar:sonar'
+            - '-Dsonar.projectKey=ci-pipeline-ref-arc'
+            - '-Dsonar.host.url=$(params.SONAR_URL)'
+            - '-Dsonar.login=$(params.SONAR_AUTH_TOKEN)'
+            - '-Dsonar.exclusions=**/*.java'
+            - '-s  $(workspaces.maven-settings.path)/settings.xml'
+      runAfter:
+        - run-test-cases
+      taskRef:
+        kind: Task
+        name: maven
+      workspaces:
+        - name: source
+          workspace: app-source
+        - name: maven-settings
+          workspace: maven-settings
+    - name: build-artifact
+      params:
+        - name: GOALS
+          value:
+            - '-DskipTests'
+            - package
+            - '-Dquarkus.native.container-build=true'
+      runAfter:
+        - static-code-analysis
+      taskRef:
+        kind: ClusterTask
+        name: maven
+      workspaces:
+        - name: source
+          workspace: app-source
+        - name: maven-settings
+          workspace: maven-settings
+    - name: scan-build-artifact
+      params:
+        - name: SCAN_TYPE
+          value: filesystem
+        - name: SEVERITY_LEVELS
+          value: $(params.SEVERITY_LEVELS)
+        - name: SCAN_PATH_OR_IMAGE_URL
+          value: $(params.LOCAL_SCAN_PATH)
+      runAfter:
+        - build-artifact
+      taskRef:
+        kind: Task
+        name: trivy-scan
+      workspaces:
+        - name: local-image-repo
+          workspace: app-source
+    - name: build-image
+      params:
+        - name: IMAGE
+          value: $(params.REMOTE_IMAGE_URL)
+        - name: TLSVERIFY
+          value: 'false'
+      runAfter:
+        - build-artifact
+      taskRef:
+        kind: Task
+        name: buildah-build
+      workspaces:
+        - name: source
+          workspace: app-source
+        - name: varlibcontainers
+          workspace: shared-image-repo
+    - name: scan-local-image
+      params:
+        - name: SCAN_TYPE
+          value: filesystem
+        - name: SEVERITY_LEVELS
+          value: $(params.SEVERITY_LEVELS)
+        - name: SCAN_PATH_OR_IMAGE_URL
+          value: $(params.LOCAL_IMAGE_SCAN_PATH)
+      runAfter:
+        - build-image
+      taskRef:
+        kind: Task
+        name: trivy-scan
+      workspaces:
+        - name: local-image-repo
+          workspace: shared-image-repo
+    - name: push-image
+      params:
+        - name: IMAGE
+          value: $(params.REMOTE_IMAGE_URL)
+        - name: IMAGE_TAG
+          value: $(params.short-commit-id)
+        - name: TLSVERIFY
+          value: 'false'
+      runAfter:
+        - build-image
+      taskRef:
+        kind: Task
+        name: buildah-push
+      workspaces:
+        - name: source
+          workspace: app-source
+        - name: varlibcontainers
+          workspace: shared-image-repo
+    - name: scan-remote-image
+      params:
+        - name: SCAN_TYPE
+          value: image
+        - name: SEVERITY_LEVELS
+          value: $(params.SEVERITY_LEVELS)
+        - name: SCAN_PATH_OR_IMAGE_URL
+          value: '$(params.SCAN_IMAGE_URL):$(params.short-commit-id)'
+        - name: IGNORE_UNFIXED
+          value: 'true'
+      runAfter:
+        - push-image
+      taskRef:
+        kind: Task
+        name: trivy-scan
+      workspaces:
+        - name: local-image-repo
+          workspace: shared-image-repo
+    - name: update-kustomize-repo
+      params:
+        - name: gitRepositoryUrl
+          value: $(params.KUSTOMIZE_GIT_URL)
+        - name: gitRepositoryRevision
+          value: $(params.KUSTOMIZE_GIT_BRANCH)
+        - name: gitPath
+          value: $(params.KUSTOMIZE_GIT_CONTEXT_DIR)
+        - name: imageTag
+          value: $(params.short-commit-id)
+        - name: verbose
+          value: 'true'
+      runAfter:
+        - scan-remote-image
+      taskRef:
+        kind: Task
+        name: update-kustomize-repo
+      workspaces:
+        - name: repository
+          workspace: kustomize-repo
+  workspaces:
+    - name: app-source
+    - name: maven-settings
+    - name: shared-image-repo
+    - name: kustomize-repo
+```
 
 The screenshot below shows a Successful Pipeline Run on the Dev Environment ![](pipeline.png)
 The screenshot below shows a Successful Pipeline Run on the Dev Environment ![](ci-dev-pipeline-failed.png)
