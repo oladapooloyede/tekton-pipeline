@@ -8,8 +8,7 @@ This article will attempt to walk you through a Reference Implementati
 
 ## Continuous Integration Reference Implementation on OpenShift using OpenShift Pipelines
 
-OpenShift Pipelines are based on the [Tekton project](https://tekton.dev)  - a new, Kubernetes and container native way to manage pipelines.The purpose of this article is demonstrate a reference implementation for the Openshift Pipelines using a sample Quarkus project.The pipeline will look like this:- 
-![](ci-pipeline-dev.png)
+OpenShift Pipelines are based on the [Tekton project](https://tekton.dev)  - a new, Kubernetes and container native way to manage pipelines.The purpose of this article is demonstrate a reference implementation for the Openshift Pipelines using a sample Quarkus project.The pipeline will look like this: ![Pipeline flow](ci-pipeline-dev.png)
 
 The pipeline will:
 
@@ -39,14 +38,14 @@ The Goal of this article is:
 
 ### Prerequisites
 
-The following are required to run this reference pipeline (and possibly your pipeline)* Ask your Cluster Administrator to install **Red Hat OpenShift Pipelines** incase you can't find it in the **Installed Operators** [](ci-operator.png)
+The following are required to run this reference pipeline (and possibly your pipeline)* Ask your Cluster Administrator to install **Red Hat OpenShift Pipelines** incase you can't find it in the **Installed Operators** ![](ci-operator.png)
 
 - Create an Openshift namespace - (In this case - `cop-pipeline`)
 
 - Create or get access to the reference source code repository
 
 - Create or get access to the reference k8s repository
-- From your profile page, in the source code repository kindly setup an Access Token with the right permissions as shown in the screenshot below:-[](pat.png)
+- From your profile page, in the source code repository kindly setup an Access Token with the right permissions as shown in the screenshot below: ![](pat.png)
 (Kindly note that the same Access Token was used for the k8s repository in the reference implementation. If you have different user profiles, you will have to setup multiple Access tokens)
 
 - Setup a secret for the Access Token(s) in the Openshift namespace (`cop-pipeline`) and annotate the secret(s) (`tekton.dev/git-0: 'https://gitlab.xxx.corp.xxx.ca'`) as shown in the yaml file below:-  
