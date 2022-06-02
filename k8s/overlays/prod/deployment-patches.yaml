@@ -1,0 +1,11 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dapo-reference-cd-pipeline
+  namespace: ccop-ref-prod
+spec:
+  template:
+    spec:
+      containers:
+      - name: dapo-reference-cd-pipeline
+        image: docker://dapo.jfrog.io/default-docker-virtual/dapo-app-image:59910085808acbb79257033ce2697a63a93059a6
