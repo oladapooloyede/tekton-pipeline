@@ -128,7 +128,7 @@ spec:
       description: vulnerability severity level
       name: SEVERITY_LEVELS
       type: string
-    - default: 'https://gitlab.xxx.corp.xxx.ca/AI/aiocp/tekton-pipeline.git'
+    - default: 'https://gitlab.xxx.corp.xxx.ca/xx/xxxxx/tekton-pipeline.git'
       description: Kustomize git repo for CD
       name: KUSTOMIZE_GIT_URL
       type: string
@@ -364,7 +364,7 @@ spec:
           - name: SEVERITY_LEVELS
             value: CRITICAL
           - name: KUSTOMIZE_GIT_URL
-            value: 'https://gitlab.xxx.corp.xxx.ca/AI/aiocp/tekton-pipeline.git'
+            value: 'https://gitlab.xxx.corp.xxx.ca/xx/xxxxx/tekton-pipeline.git'
           - name: KUSTOMIZE_GIT_CONTEXT_DIR
             value: k8s/overlays/dev
         pipelineRef:
@@ -542,7 +542,7 @@ The pipeline will:   
 
 - Scan image in remote image repository for vulnerabilities using a Trivy task
 
-- Update the [repository ](https://gitlab.xxx.corp.xx.ca/AI/aiocp/tekton-pipeline.git) under the path `k8s/overlays/uat` in `uat` branch to point to the latest image in the Artifactory registry
+- Update the [repository ](https://gitlab.xxx.corp.xx.ca/xx/xxxxx/tekton-pipeline.git) under the path `k8s/overlays/uat` in `uat` branch to point to the latest image in the Artifactory registry
 
 ### Promoting to Prod Environment
 
@@ -664,7 +664,7 @@ The pipeline will:  
 
 - Scan image in remote image repository for vulnerabilities using a `Trivy` task
 
-- Update the [repository](https://gitlab.xxx.corp.xxx.ca/AI/aiocp/tekton-pipeline.git) under the path `k8s/overlays/prod` in `master` branch to point to the latest image in the image repository (e.g Artifactory)   
+- Update the [repository](https://gitlab.xxx.corp.xxx.ca/xx/xxxx/tekton-pipeline.git) under the path `k8s/overlays/prod` in `master` branch to point to the latest image in the image repository (e.g Artifactory)   
 
 ## Continuous Delivery Reference Implementation on OpenShift using OpenShift GitOps
 
@@ -677,7 +677,7 @@ The following are steps for setting up a tenant ArgoCD instance
 - Create an argocd instance namespace on OpenShift
 
 - Create all the namespaces that the argocd instance will manage i.e namepaces to deploy the applications.
-This is typically done through the [Frontdoor](https://openshift.int.xxx.ca). If you have access to create namespaces, you can use the code snippet below including the label  `argocd.argoproj.io/managed-by: <argocd instance namespace>`:
+If you have access to create namespaces, you can use the code snippet below including the label  `argocd.argoproj.io/managed-by: <argocd instance namespace>`:
 ``` yaml
 for namespace in ccop-ref-dev ccop-ref-uat ccop-ref-prod
 do
@@ -874,7 +874,7 @@ spec:
         - namespace: ccop-ref-prod
         server: 'https://kubernetes.default.svc'
     sourceRepos:
-        - 'https://gitlab.xxx.corp.xxx.ca/AI/aiocp/tekton-pipeline.git'
+        - 'https://gitlab.xxx.corp.xxx.ca/xx/xxxxx/tekton-pipeline.git'
     status: {}
 ```
 ```yaml
@@ -888,7 +888,7 @@ spec:
         server: 'https://kubernetes.default.svc'
     source:
         path: k8s/overlays/dev
-        repoURL: 'https://gitlab.xxx.corp.xxx.ca/AI/aiocp/tekton-pipeline.git'
+        repoURL: 'https://gitlab.xxx.corp.xxx.ca/xx/xxxxx/tekton-pipeline.git'
         targetRevision: dev
     project: dev-project
     syncPolicy:
@@ -918,7 +918,7 @@ spec:
         - namespace: ccop-ref-uat
         server: 'https://kubernetes.default.svc'
     sourceRepos:
-        - 'https://gitlab.xxx.corp.xxx.ca/AI/aiocp/tekton-pipeline.git'
+        - 'https://gitlab.xxx.corp.xxx.ca/xx/xxxxx/tekton-pipeline.git'
     status: {}
 ```
 ``` yaml
@@ -932,7 +932,7 @@ spec:
         server: 'https://kubernetes.default.svc'
     source:
         path: k8s/overlays/uat
-        repoURL: 'https://gitlab.xxx.corp.xxx.ca/AI/aiocp/tekton-pipeline.git'
+        repoURL: 'https://gitlab.xxx.corp.xxx.ca/xx/xxxxx/tekton-pipeline.git'
         targetRevision: uat
     project: uat-project
     syncPolicy:
@@ -962,7 +962,7 @@ spec:
         - namespace: ccop-ref-prod
         server: 'https://kubernetes.default.svc'
     sourceRepos:
-        - 'https://gitlab.xxx.corp.xxx.ca/AI/aiocp/tekton-pipeline.git'
+        - 'https://gitlab.xxx.corp.xxx.ca/xx/xxxxx/tekton-pipeline.git'
     status: {}
 ```
 ``` yaml
@@ -976,7 +976,7 @@ spec:
         server: 'https://kubernetes.default.svc'
     source:
         path: k8s/overlays/prod
-        repoURL: 'https://gitlab.xxx.corp.xxx.ca/AI/aiocp/tekton-pipeline.git'
+        repoURL: 'https://gitlab.xxx.corp.xxx.ca/xx/xxxxx/tekton-pipeline.git'
         targetRevision: master
     project: prod-project
     syncPolicy:
