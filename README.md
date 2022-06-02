@@ -853,7 +853,7 @@ A detailed information on configuring RBAC to your Argo CD instances is provided
 
 Kindly carry out the following activities:-
 
-- Kindly setup the namespace `ccop-ref-dev` (if it does not exist) on Openshift for deployment using this label `argocd.argoproj.io/managed-by: <argocd instance namespace>` on Front Door. If the namespace is not labelled with this value - `argocd.argoproj.io/managed-by: <argocd instance namespace>` on Front Door, after creation, kindly reach out to the cluster admin.
+- Kindly setup the namespace `ccop-ref-dev` (if it does not exist) on Openshift for deployment using this label `argocd.argoproj.io/managed-by: <argocd instance namespace>`. If the namespace is not labelled with this value - `argocd.argoproj.io/managed-by: <argocd instance namespace>`, after creation, kindly reach out to the cluster admin.
 
 - Log into  Argo CD cluster, go to `Settings/Repositories` and click on the button `+ CONNECT REPO USING HTTPS` in order to permit connection to your k8s repo. Kindly see screenshots below:- 
 ![](argocd-repo-create.png) 
@@ -901,7 +901,7 @@ spec:
 
 Kindly carry out the following activities:-
 
-- Kindly setup the namespace `ccop-ref-uat` (if it does not exist) on Openshift for deployment using this label `argocd.argoproj.io/managed-by: <argocd instance namespace>` on Front Door. If the namespace is not labelled with this value - `argocd.argoproj.io/managed-by: <argocd instance namespace>` on Front Door, after creation, kindly reach out to the cluster admin.
+- Kindly setup the namespace `ccop-ref-uat` (if it does not exist) on Openshift for deployment using this label `argocd.argoproj.io/managed-by: <argocd instance namespace>`. If the namespace is not labelled with this value - `argocd.argoproj.io/managed-by: <argocd instance namespace>`, after creation, kindly reach out to the cluster admin.
 
 - Kindly create the following n the <argocd instance namespace> of the Staging environment:- 
 ```yaml
@@ -945,7 +945,7 @@ spec:
 
 Kindly carry out the following activities:-
 
-- Kindly setup the namespace `ccop-ref-prod` (if it does not exist) on Openshift for deployment using this label `argocd.argoproj.io/managed-by: <argocd instance namespace>` on Front Door. If the namespace is not labelled with this value - `argocd.argoproj.io/managed-by: <argocd instance namespace>` on Front Door, after creation, kindly reach out to the cluster admin.
+- Kindly setup the namespace `ccop-ref-prod` (if it does not exist) on Openshift for deployment using this label `argocd.argoproj.io/managed-by: <argocd instance namespace>`. If the namespace is not labelled with this value - `argocd.argoproj.io/managed-by: <argocd instance namespace>`, after creation, kindly reach out to the cluster admin.
 
 - Kindly create the following in the <argocd instance namespace> of the Production environment:- 
 ``` yaml
