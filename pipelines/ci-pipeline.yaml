@@ -15,7 +15,7 @@ spec:
     - description: image tag - truncated commit Id
       name: short-commit-id
       type: string
-    - default: 'http://sonarqube-cicd-tools.apps.ocp-dev-ade.xxxdev.dev.xxx.ca'
+    - default: 'http://sonarqube-cicd-tools.apps.ocp-dev-xxx.xxxdev.dev.xxx.ca'
       description: SonarQube url for static code analysis
       name: SONAR_URL
       type: string
